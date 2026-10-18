@@ -185,3 +185,41 @@ h1,.mast h1,.start-header h1{color:#744130}
 
 .lesson-topic .start-mode:last-child{grid-column:span 2}
 .scene-tools .toggle[aria-pressed=true] .switch{background:#345e4f}
+
+/* Painted stories: one play, a clear destination, and explicit replay. */
+.scene-top.story-scene-top{flex-direction:row;justify-content:flex-end;gap:0}
+.story-scene-top>div:first-child{display:none}
+.story-scene-top .scene-tools{width:100%;justify-content:flex-end}
+.story-controls{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 15px 14px;background:#fffaf1;border-top:1px solid #e6dbc9}
+.story-controls[hidden]{display:none}
+.story-caption{display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin:0;color:#53634f;font-size:12px;line-height:1.45}
+.story-caption:before{content:"";display:block;flex:none;width:6px;height:6px;border-radius:50%;background:#91a978}
+.story-actions{display:flex;align-items:center;flex:none;gap:6px}
+.story-button{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #d9d8c6;background:#f8f6ec;color:#345e4f;border-radius:10px;padding:7px 10px;min-height:40px;min-width:40px;font:500 11px/1.2 "Golos Text",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.story-button:disabled{opacity:.5;cursor:wait}
+.story-button:focus-visible{outline:3px solid #a9c29d;outline-offset:2px}
+.story-replay>span:first-child{font-size:21px;line-height:1}
+.story-replay-text{display:none}
+.story-controls.is-done .story-replay-text,.story-controls.is-reduced .story-replay-text{display:inline}
+.story-track{height:3px;position:absolute;bottom:0;left:0;right:0;background:#ede7d7;overflow:hidden}
+.story-track i{display:block;height:100%;width:0;background:#75956c}
+.story-ground-shadow{fill:#35251c;opacity:.22}
+.story-call{pointer-events:none}
+.story-call path{fill:#fffaf0;stroke:#c5a87d;stroke-width:2;filter:drop-shadow(0 3px 3px #38281725)}
+.story-call text{font:600 26px "Golos Text",system-ui,sans-serif;fill:#72432f}
+.story-speaker-tag rect{fill:#fff9e9;stroke:#c5b398;stroke-width:1.5;opacity:.95}
+.story-speaker-tag text{font:500 23px "Golos Text",system-ui,sans-serif;fill:#5e4d36}
+.story-object-label{font:32px "Noto Serif Tibetan",serif;fill:#fff9e7;stroke:#5f412b;stroke-width:3;stroke-linejoin:round;paint-order:stroke}
+.story-focus ellipse{fill:none;stroke:#f9daa1;stroke-width:4;filter:drop-shadow(0 0 9px #fff4cc)}
+@media(max-width:800px){.story-controls{padding:9px 10px 12px;gap:8px}.story-caption{font-size:10px;gap:6px}.story-button{padding:7px 9px;min-width:36px;font-size:10px}.story-actions{gap:4px}.story-replay>span:first-child{font-size:20px}.story-controls.is-reduced{flex-wrap:wrap}.story-controls.is-reduced .story-caption{flex-basis:100%}}
+@media(max-width:350px){.story-controls{gap:5px}.story-caption{font-size:9px}.story-button{padding:6px 7px;min-width:34px}.story-caption:before{display:none}}
+
+/* Bespoke cat activity icons, drawn for this game. */
+.mode-icon .game-mode-icon{width:34px;height:34px;overflow:visible}
+.game-icon-wash{fill:currentColor;fill-opacity:.12}
+.game-icon-solid{fill:currentColor;stroke:currentColor}
+.game-icon-paper{color:#fffaf1;stroke:currentColor}
+.game-icon-ru{fill:currentColor;stroke:none;font:600 18px Georgia,serif}
+.game-icon-bo{fill:#fffaf1;stroke:none;font:20px 'Noto Serif Tibetan',serif}
+@media(max-width:800px){.start-mode .mode-icon{width:34px;height:36px;border-radius:10px}.mode-icon .game-mode-icon{width:29px;height:29px}.start-mode{gap:8px}}
+@media(max-width:350px){.start-mode .mode-icon{width:29px;height:32px}.mode-icon .game-mode-icon{width:26px;height:26px}}

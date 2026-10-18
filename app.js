@@ -21,7 +21,7 @@ const CATS=[
  {id:'siamese',name:'Коричнево-белая',ru:'коричнево-белая кошка',plural:'коричнево-белые кошки',bo:'ཞི་མི་སྨུག་དཀར་ཁྲ་བོ་',src:'cat-brown-white.webp',heightRatio:1}
 ];
 let menuOpen=true,menuDraft=null,menuStep=1;
-const prefs={version:5,timerVersion:1,edition:9,room:'bedroom',mode:'learn',cat:'original',labels:false,zoom:true,hideRussian:false,states:{}};
+const prefs={version:5,timerVersion:1,edition:10,room:'bedroom',mode:'learn',cat:'original',labels:false,zoom:true,hideRussian:false,states:{}};
 if(loaded&&loaded.version===5){if(ROOMS[loaded.room])prefs.room=loaded.room;if(['learn','A','B','C','M','T'].includes(loaded.mode))prefs.mode=loaded.mode;if(CATS.some(c=>c.id===loaded.cat))prefs.cat=loaded.cat;for(const k of ['labels','zoom','hideRussian'])if(typeof loaded[k]==='boolean')prefs[k]=loaded[k];if(loaded.states&&typeof loaded.states==='object'&&!Array.isArray(loaded.states))prefs.states=loaded.states}
 if(!loaded||!loaded.edition||loaded.edition<8)prefs.zoom=true;
 if(ROOMS[prefs.room].lesson&&prefs.mode==='B')prefs.mode='A';
@@ -45,7 +45,7 @@ function catBank(){return Object.keys(ROOMS).flatMap(relevantBank)}
 function npBo(id,col,gen=false){const n=N[id],c=COL[col];return c?n.bo+(gen?c.gen:c.bo):(gen?n.gen:n.bo)}
 function npRu(id,col,cs='nom'){const n=N[id],c=COL[col];return (c?(cs==='nom'?c.nom[n.gender]:c.rc[n.gender][cs])+' ':'')+(cs==='nom'?n.ru:n.rc[cs])}
 function findScene(id,rel,rid=prefs.room){return ROOMS[rid].scenes.find(s=>s.id===id&&s.rel===rel)}
-function sceneQuestion(sc,index=0,rid=prefs.room){if(ROOMS[rid].lesson)return window.LESSON11.question(sc,index,rid);const rm=ROOMS[rid],pair=rm.poses[sc.id].length===2,cat=currentCat(),sub=cat.bo+(pair?'གཉིས་':''),subject=pair?'две '+cat.plural:cat.ru;
+function sceneQuestion(sc,index=0,rid=prefs.room){if(ROOMS[rid].lesson)return window.LESSON11.question(sc,index,rid,currentCat());const rm=ROOMS[rid],pair=rm.poses[sc.id].length===2,cat=currentCat(),sub=cat.bo+(pair?'གཉིས་':''),subject=pair?'две '+cat.plural:cat.ru;
  const refs=sc.refs.map(id=>({id,...rm.refs[id]}));
  const loc=refs.map((o,i)=>npBo(o.noun,rm.objectColors?o.color:null,i===refs.length-1)).join('དང་');
  const form=R[sc.rel].forms[index%R[sc.rel].forms.length],locFirst=rm.level>1&&index%3===2;
@@ -55,12 +55,12 @@ function sceneQuestion(sc,index=0,rid=prefs.room){if(ROOMS[rid].lesson)return wi
 function refreshQuestion(q){const sc=findScene(q.scene,q.rel,q.room);if(!sc)return q;const fresh=sceneQuestion(sc,q.index||0,q.room);for(const k of ['head','tail','ru','words'])q[k]=fresh[k];q.bo=q.head+q.form+q.tail;if(q.kind==='T'&&Array.isArray(q.options))for(const o of q.options){const os=o&&findScene(o.scene,o.rel,q.room);if(os){const f=sceneQuestion(os,o.index||0,q.room);for(const k of ['head','tail','ru'])o[k]=f[k];}}return q}
 
 function refreshAllQuestions(){for(const rid of Object.keys(ROOMS))for(const r of Object.values(state(rid).rounds))if(r?.qs)r.qs.forEach(refreshQuestion)}
-function migrateRound(r,mode,rid){if(!r||!Array.isArray(r.qs))return;const rm=ROOMS[rid];r.qs=r.qs.map((q,i)=>{if(!q||!rm.allowed.includes(q.rel))return q;const oldScene=findScene(q.scene,q.rel,rid),legacyRefs=(q.refs||[]).map(v=>typeof v==='string'?v:v.id);const sc=oldScene||rm.scenes.find(sc=>sc.rel===q.rel&&sc.refs.every(id=>legacyRefs.includes(id)))||rm.scenes.filter(sc=>sc.rel===q.rel)[i%rm.scenes.filter(sc=>sc.rel===q.rel).length];if(!sc)return q;const fresh=sceneQuestion(sc,q.index||i,rid);return refreshQuestion({...q,...fresh,...Object.fromEntries(['chosen','ok','hint','options','cands','kind','remainingMs','timeSpentMs','timedOut','timerWarned','statsRecorded'].filter(k=>Object.hasOwn(q,k)).map(k=>[k,q[k]])),form:R[q.rel].forms.includes(q.form)?q.form:fresh.form,kind:mode==='M'?q.kind:mode})});r.contentVersion=7}
+function migrateRound(r,mode,rid){if(!r||!Array.isArray(r.qs))return;const rm=ROOMS[rid];r.qs=r.qs.map((q,i)=>{if(!q||!rm.allowed.includes(q.rel))return q;const oldScene=findScene(q.scene,q.rel,rid),legacyRefs=(q.refs||[]).map(v=>typeof v==='string'?v:v.id);const sc=oldScene||rm.scenes.find(sc=>sc.rel===q.rel&&sc.refs.every(id=>legacyRefs.includes(id)))||rm.scenes.filter(sc=>sc.rel===q.rel)[i%rm.scenes.filter(sc=>sc.rel===q.rel).length];if(!sc)return q;const fresh=sceneQuestion(sc,q.index||i,rid);return refreshQuestion({...q,...fresh,...Object.fromEntries(['chosen','ok','hint','options','cands','kind','remainingMs','timeSpentMs','timedOut','timerWarned','statsRecorded','storyWatched','storyVersion'].filter(k=>Object.hasOwn(q,k)).map(k=>[k,q[k]])),form:R[q.rel].forms.includes(q.form)?q.form:fresh.form,kind:mode==='M'?q.kind:mode})});r.contentVersion=7}
 function optionsFor(q,rid=prefs.room){const sc=q.type==='scene'?findScene(q.scene,q.rel,rid):null,avoid=new Set([q.rel,...(sc?.amb||[])]);let choices=ROOMS[rid].allowed.filter(x=>!avoid.has(x));
  // Four beginner terms are deliberately kept separate; advanced synonyms never compete.
  if(choices.length<3)choices=ORIGINAL_RELATIONS.filter(x=>!avoid.has(x));
  return shuffle([q.rel,...shuffle(choices).slice(0,3)]).map(rel=>({rel,form:rel===q.rel?q.form:pick(R[rel].forms)}))}
-function prepare(source,mode,rid=prefs.room,optionCount=state(rid).optionCount){const q=clone(source);q.room=rid;q.kind=mode;q.chosen=null;q.ok=null;q.hint=false;q.timedOut=false;q.timerWarned=false;delete q.remainingMs;delete q.timeSpentMs;delete q.statsRecorded;
+function prepare(source,mode,rid=prefs.room,optionCount=state(rid).optionCount){const q=clone(source);q.room=rid;q.kind=mode;q.chosen=null;q.ok=null;q.hint=false;q.timedOut=false;q.timerWarned=false;delete q.remainingMs;delete q.timeSpentMs;delete q.statsRecorded;delete q.storyWatched;
  if(mode==='B'){const sc=findScene(q.scene,q.rel,rid);q.cands=shuffle([{id:sc.id,correct:true},...shuffle(sc.decoys).slice(0,optionCount-1).map(id=>({id,correct:false}))]);delete q.options}
  else if(mode==='T'){const bank=relevantBank(rid),relations=shuffle(ROOMS[rid].allowed.filter(rel=>rel!==q.rel)).slice(0,optionCount-1);const choices=[q,...relations.map(rel=>pick(bank.filter(candidate=>candidate.rel===rel)))];q.options=shuffle(choices).map(o=>({rel:o.rel,form:o.form,scene:o.scene,index:o.index,head:o.head,tail:o.tail,ru:o.ru}));delete q.cands;}
  else{const all=optionsFor(q,rid);q.options=shuffle([all.find(o=>o.rel===q.rel),...all.filter(o=>o.rel!==q.rel).slice(0,optionCount-1)]);delete q.cands}return q}
@@ -133,7 +133,7 @@ function activeRound() {
 function sampleClock() {
   if (!clock.question) return;
   const now = performance.now();
-  clock.question.remainingMs = Math.max(0, clock.question.remainingMs - Math.max(0, now - clock.last));
+  if(!storyBlocked())clock.question.remainingMs = Math.max(0, clock.question.remainingMs - Math.max(0, now - clock.last));
   clock.last = now;
 }
 function stopClock() {
@@ -164,6 +164,7 @@ function finishTimeout(r) {
   return true;
 }
 function pauseTimer(refresh = true) {
+  window.CAT_STORIES.pause();
   const r = clock.round || activeRound();
   stopClock();
   if (!r || !r.timeLimit || !r.started || r.i >= r.qs.length) return;
@@ -181,13 +182,14 @@ function resumeTimer() {
   if (r.qs[r.i].chosen !== null) return;
   r.started = true;
   r.paused = false;
+  window.CAT_STORIES.resume();syncStoryControls();
   save();
   syncTimer(r);
   $('#liveStatus').textContent = 'Отсчёт начат. Осталось ' + Math.ceil(r.qs[r.i].remainingMs / 1000) + ' секунд.';
   $('#panel [data-answer]')?.focus({ preventScroll: true });
 }
 function timerCanAnswer(r) {
-  if(menuOpen)return false;
+  if(menuOpen||storyBlocked())return false;
   if (!r.timeLimit) return true;
   if (!r.started || r.paused || document.hidden || $('dialog[open]')) return false;
   sampleClock();
@@ -220,7 +222,7 @@ function updateTimer() {
   widget.classList.toggle('is-stopped', answered || paused);
   $('#timerValue').textContent = timeText(q.remainingMs);
   $('#timerValue').setAttribute('aria-label', 'Осталось ' + Math.ceil(q.remainingMs / 1000) + ' секунд');
-  $('#timerLabel').textContent = q.timedOut ? 'Время вышло' : answered ? 'Отсчёт остановлен' : !r.started ? 'На каждый вопрос' : r.paused ? 'Пауза' : urgent ? 'Успейте ответить' : 'На этот вопрос';
+  $('#timerLabel').textContent = storyBlocked()?'Сначала смотрим сценку':q.timedOut ? 'Время вышло' : answered ? 'Отсчёт остановлен' : !r.started ? 'На каждый вопрос' : r.paused ? 'Пауза' : urgent ? 'Успейте ответить' : 'На этот вопрос';
   $('#timerFill').style.width = Math.max(0, Math.min(100, q.remainingMs / (r.timeLimit * 10))) + '%';
   $('#timerPause').hidden = answered || paused;
   if (mini) mini.classList.toggle('is-urgent', urgent);
@@ -268,6 +270,7 @@ function syncTimer(r = activeRound()) {
   if (document.hidden || $('dialog[open]')) r.paused = r.started;
   if (!r.started || r.paused) { stopClock(); updateTimer(); updateTimerOverlay(r); return; }
   if (q.remainingMs <= 0) { finishTimeout(r); return; }
+  if(storyBlocked()){stopClock();updateTimer();updateTimerOverlay(r);return;}
   if (!clock.interval) {
     clock.round = r; clock.question = q; clock.last = performance.now(); clock.savedAt = clock.last;
     clock.interval = setInterval(tickTimer, 100);
@@ -296,20 +299,57 @@ const MENU_MODES=[
  {id:'M',title:'Микс',description:'Чередуйте три вида заданий'}
 ];
 
-function modeInfo(id,rid=prefs.room){const base=MENU_MODES.find(m=>m.id===id);if(!ROOMS[rid].lesson)return base;return {...base,...(id==='A'?{title:'По подсказке',description:'Выбирайте предлог по наглядной подсказке'}:id==='learn'?{description:'Изучайте восемь новых предлогов'}:id==='M'?{description:'Подсказки, пропуски и перевод'}:{})};}
-function uiIcon(id){const paths={learn:'M5 5h5q3 0 3 3v12q-2-2-5-2H4V5zm8 3q0-3 3-3h5v13h-5q-2 0-3 2M8 9h2M8 12h2M16 9h2M16 12h2',A:'M3 12s4-7 9-7 9 7 9 7-4 7-9 7-9-7-9-7z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',B:'M5 20v-4a7 7 0 0 1 14 0v4M4 6l3-2 3 2M14 6l3-2 3 2M8 12h.01M16 12h.01M11 15h2',C:'M5 5h14v14H5zM8 9h8M8 13h3M14 13h2M8 16h8',T:'M3 6h12M9 3v3m-4 3q3 6 9 7M13 6q-1 6-8 10m9 5 4-11 4 11m-6-4h4',M:'M3 6h3c5 0 5 12 10 12h5m-4-3 4 3-4 3M3 18h3c2 0 3-2 4-4m3-4c1-2 2-4 4-4h4m-4-3 4 3-4 3',check:'m5 12 4 4L19 6',target:'M20 12a8 8 0 1 1-8-8m0 3v6l5-5m-5 5 5 1m-5-1-1-5'};return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[id]||paths.A}"/></svg>`;}
+function modeInfo(id,rid=prefs.room){const base=MENU_MODES.find(m=>m.id===id);if(!ROOMS[rid].lesson)return base;return {...base,...(id==='A'?{title:'Где кошка?',description:'Смотрите сценку и выбирайте предлог'}:id==='learn'?{description:'Изучайте предлоги в сценках с кошкой'}:id==='M'?{description:'Сценки, пропуски и перевод'}:{})};}
+function uiIcon(id){
+ if(id==='check'||id==='target'){const path=id==='check'?'m5 12 4 4L19 6':'M20 12a8 8 0 1 1-8-8m0 3v6l5-5m-5 5 5 1m-5-1-1-5';return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;}
+ // Original game pictograms: the same little cat appears in every activity.
+ const face=`<path class="game-icon-wash" d="M11 25V10l10 7q5-2 10 0l6-7v15q0 13-13 13T11 25Z"/><path d="M11 25V10l10 7q5-2 10 0l6-7v15q0 13-13 13T11 25Z"/><path d="m19 27 2 1 2-1m5 0 2 1 2-1m-9 5 2 1 2-1M5 26l7 2m-6 6 7-2m23-4 7-2m-1 8-7-2"/>`;
+ const mini=(x,y,scale)=>`<g transform="translate(${x} ${y}) scale(${scale})">${face}</g>`;
+ const drawings={
+  learn:`<path class="game-icon-wash" d="M5 13q10-4 19 1 9-5 19-1v25q-10-3-19 2-9-5-19-2Z"/><path d="M5 13q10-4 19 1 9-5 19-1v25q-10-3-19 2-9-5-19-2Zm19 1v26"/>${mini(3,12,.48)}<path d="M30 21h7m-7 7h7m-7 6h5"/>`,
+  A:`${mini(-1,0,1)}<circle class="game-icon-solid" cx="39" cy="10" r="7"/><path class="game-icon-paper" d="M37.5 8.5a1.8 1.8 0 1 1 2.5 1.7q-1 .4-1 1.4m0 2.3h.01"/>`,
+  B:`${mini(11,-2,.62)}<ellipse class="game-icon-wash" cx="25" cy="36" rx="17" ry="6"/><ellipse cx="25" cy="36" rx="17" ry="6" stroke-dasharray="3 4"/><path d="m17 32 6 5 10-9"/><path d="M7 19v5m-2-2h5"/>`,
+  C:`<rect class="game-icon-wash" x="5" y="8" width="38" height="34" rx="5"/><rect x="5" y="8" width="38" height="34" rx="5"/>${mini(7,10,.38)}<path d="M29 18h7M12 33h7m13 0h4"/><rect x="23" y="28" width="6" height="9" rx="1.5" stroke-dasharray="2 3"/>`,
+  T:`<path class="game-icon-wash" d="M4 7h24v23H15l-7 5v-5H4Z"/><path d="M4 7h24v23H15l-7 5v-5H4Z"/><path class="game-icon-solid" d="M24 19h20v21h-4v6l-8-6h-8Z"/><text x="16" y="24" text-anchor="middle" class="game-icon-ru">Я</text><text x="34" y="34" text-anchor="middle" class="game-icon-bo" lang="bo">ཀ</text>`,
+  M:`<rect class="game-icon-wash" x="5" y="7" width="25" height="30" rx="5" transform="rotate(-10 17 22)"/><rect x="5" y="7" width="25" height="30" rx="5" transform="rotate(-10 17 22)"/><rect class="game-icon-solid" x="18" y="13" width="25" height="30" rx="5" transform="rotate(8 30 28)"/><g class="game-icon-paper">${mini(16,14,.56)}</g>`
+ };
+ return `<svg class="game-mode-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${drawings[id]||drawings.A}</svg>`;
+}
 function renderMenuModes(){const d=menuDraft;$('#startScreen').classList.toggle('lesson-topic',ROOMS[d.room].lesson===true);$('#menuModes').innerHTML=MENU_MODES.filter(m=>!ROOMS[d.room].lesson||m.id!=='B').map(base=>{const m=modeInfo(base.id,d.room);return `<button class="setup-choice start-mode mode-${m.id}" data-menu-mode="${m.id}" aria-pressed="${d.mode===m.id}"><span class="mode-icon">${uiIcon(m.id)}</span><span class="mode-copy"><strong>${m.title}</strong><span>${m.description}</span></span><span class="choice-tick">${uiIcon('check')}</span></button>`;}).join('');}
-function renderJourney(){const d=menuDraft,c=CATS.find(c=>c.id===d.cat);$('#setupJourney').innerHTML=['Кошка','Тема','Игра'].map((name,i)=>`<li class="${menuStep===i+1?'current':menuStep>i+1?'done':''}" ${menuStep===i+1?'aria-current="step"':''}><span>${menuStep>i+1?'✓':i+1}</span>${name}</li>`).join('');$('#setupSelection').hidden=menuStep===1;$('#setupSelection').innerHTML=`<img src="${c.src}" alt=""/><span>${esc(c.name)} кошка${menuStep===3?' <i>·</i> '+esc(ROOMS[d.room].title):''}</span>`;}
+function renderJourney(){const d=menuDraft,c=CATS.find(c=>c.id===d.cat);$('#setupJourney').innerHTML=['Кошка','Уровень','Тип игры'].map((name,i)=>`<li class="${menuStep===i+1?'current':menuStep>i+1?'done':''}" ${menuStep===i+1?'aria-current="step"':''}><span>${menuStep>i+1?'✓':i+1}</span>${name}</li>`).join('');$('#setupSelection').hidden=menuStep===1;$('#setupSelection').innerHTML=`<img src="${c.src}" alt=""/><span>${esc(c.name)} кошка${menuStep===3?' <i>·</i> '+esc(ROOMS[d.room].title):''}</span>`;}
 function updateSceneTools(){const show=prefs.labels?'Скрыть':'Показать',b=$('#labelsBtn');b.setAttribute('aria-pressed',String(prefs.labels));b.setAttribute('aria-label',show+' подписи к предметам на картинке');b.title=show+' подписи к предметам на картинке';b.innerHTML='<span class="switch" aria-hidden="true"></span><span class="labels-long">'+show+' подписи к предметам</span><span class="labels-short" aria-hidden="true">Подписи к предметам</span>';}
-function drawLesson(o){const svg=$('#scene');svg.setAttribute('viewBox','0 0 1000 650');svg.setAttribute('role','img');svg.setAttribute('aria-label',o.alt||'Наглядная подсказка к фразе.');svg.innerHTML=window.LESSON11.art(o.id,currentCat(),false,prefs.labels);$('.scene-wrap').style.aspectRatio='1000 / 650';$('#zoomBtn').hidden=true;updateSceneTools();}
+const storyRoundIds=new WeakMap();let storyRoundSerial=0;
+function storyBlocked(){return !menuOpen&&room().lesson&&window.CAT_STORIES.blocked();}
+function syncStoryControls(){
+ const controls=$('#storyControls');controls.hidden=menuOpen||!room().lesson;if(controls.hidden)return;
+ const st=window.CAT_STORIES.state(),spec=window.CAT_STORIES.scenes[lastDraw?.id],r=activeRound(),q=r?.qs[r.i],done=!st.blocked;
+ const caption=st.error?'Не удалось загрузить сценку. Нажмите «Повторить».':st.loading?'Готовим сценку…':st.reduced&&!done?'Кадр '+(st.progress<.5?'1':'2')+' из 3':st.paused&&!done?'Сценка на паузе':done?(prefs.mode==='learn'?'Сценка завершена':spec?.question||'Выберите подходящий предлог'):st.phase==='call'?spec?.introText||'Кошку позвали':st.phase==='walk'?'Смотрите за кошкой':'Кошка остановилась';
+ if($('#storyCaption').textContent!==caption)$('#storyCaption').textContent=caption;
+ controls.classList.toggle('is-done',done);controls.classList.toggle('is-reduced',!!st.reduced);$('#storyReplay').disabled=!!st.loading;
+ $('#storyReplay').setAttribute('aria-label',st.reduced&&!done?'Следующий кадр сценки':'Повторить сценку');$('#storyReplay .story-replay-text').textContent=st.reduced&&!done?'Следующий кадр':'Повторить';
+ $('#storyPause').hidden=done||st.loading||st.reduced||st.error;$('#storyPause').textContent=st.paused?'▶':'Ⅱ';$('#storyPause').setAttribute('aria-label',st.paused?'Продолжить сценку':'Приостановить сценку');
+ $('#storySkip').hidden=done||st.loading;$('#storySkip').textContent=prefs.mode==='learn'?'К концу':'К вопросу';
+ $$('#panel [data-answer]').forEach(b=>b.disabled=!!q&&(q.chosen!==null||st.blocked));$$('#panel [data-action="hint"]').forEach(b=>b.disabled=!!st.blocked);
+}
+function drawLesson(o){
+ $('#sceneHeading').hidden=true;$('.scene-top').classList.add('story-scene-top');
+ const svg=$('#scene'),r=activeRound(),q=r?.qs[r.i];svg.setAttribute('viewBox','0 0 1000 667');svg.setAttribute('role','img');svg.setAttribute('aria-label',o.alt||'Сценка с кошкой.');
+ if(r&&!storyRoundIds.has(r))storyRoundIds.set(r,++storyRoundSerial);
+ const key=prefs.mode==='learn'?'learn-'+state().learnC+'-'+state().learnIndex:'round-'+storyRoundIds.get(r)+'-'+(r?.i??'end')+'-'+o.id;
+ const paused=menuOpen||document.hidden||!!$('dialog[open]')||!!(r?.timeLimit&&(!r.started||r.paused));
+ window.CAT_STORIES.mount(svg,{id:o.id,cat:currentCat(),labels:prefs.labels,key,skip:!!q&&(q.chosen!==null||q.storyWatched===true)||!!r&&r.i>=r.qs.length,paused,
+  onState:syncStoryControls,onProgress:p=>{$('#storyFill').style.width=(p*100)+'%'},onDone:()=>{if(q&&q.chosen===null){q.storyWatched=true;save();}syncStoryControls();if(!menuOpen&&prefs.mode!=='learn')syncTimer(r);}});
+ $('.scene-wrap').style.aspectRatio='1000 / 667';$('#zoomBtn').hidden=true;$('#storyControls').hidden=false;updateSceneTools();syncStoryControls();
+}
+
 
 function applyTranslationVisibility(){document.body.classList.toggle('hide-russian',prefs.hideRussian);$('#playHideRussian').checked=prefs.hideRussian;}
-function renderCompanion(){applyTranslationVisibility();const c=currentCat();$('#gameCompanion').innerHTML='<img src="'+c.src+'" alt="'+esc(c.name)+' кошка"/><span>'+esc(c.name)+'</span>';$('#sessionSummary').textContent=room().title+' · '+modeInfo(prefs.mode).title;}
+function renderCompanion(){applyTranslationVisibility();const c=currentCat();$('#gameCompanion').innerHTML='<img src="'+c.src+'" alt="'+esc(c.name)+' кошка"/><span>'+esc(c.name)+'</span>';$('#sessionSummary').hidden=!!room().lesson;$('#sessionSummary').textContent=room().lesson?'':room().title+' · '+modeInfo(prefs.mode).title;}
 function menuSettings(rid,mode){const s=state(rid),r=mode==='learn'?null:s.rounds[mode];return r&&r.i<r.qs.length?{filter:r.filter,length:r.retry?s.length:r.length,optionCount:r.optionCount||4,timeLimit:r.timeLimit||0}:{filter:s.filter,length:s.length,optionCount:s.optionCount,timeLimit:s.timeLimit};}
 function menuSelection(){return {cat:prefs.cat,room:prefs.room,mode:prefs.mode,hideRussian:prefs.hideRussian,...menuSettings(prefs.room,prefs.mode)};}
 function matchingMenuRound(){if(!menuDraft||menuDraft.mode==='learn')return null;const d=menuDraft,s=state(d.room),r=s.rounds[d.mode];return r&&r.i<r.qs.length&&r.filter===d.filter&&(r.retry?d.length===s.length:r.length===d.length)&&(r.optionCount||4)===d.optionCount&&(r.timeLimit||0)===d.timeLimit?r:null;}
 function updateStartAction(){const r=matchingMenuRound(),progress=r&&(r.i>0||r.qs.some(q=>q.chosen!==null)||(r.timeLimit&&r.started));$('#startButton').textContent=menuDraft.mode==='learn'?'Открыть словарик':progress?'Продолжить · вопрос '+(r.i+1)+' из '+r.qs.length:'Начать игру';$('#startButton').hidden=menuStep!==3;$('#restartButton').hidden=menuStep!==3||!progress;$('#menuNextButton').hidden=menuStep===3;$('#menuNextButton').textContent=menuStep===2?'Далее: тип игры':'Далее';$('#menuBackButton').hidden=menuStep===1;}
-function renderMenuStep(){const titles=['Выберите кошку','Выберите комнату или тему','Выберите тип игры'];$('#startTitle').textContent=titles[menuStep-1];$('#menuStepCount').textContent='Шаг '+menuStep+' из 3';$('#menuCatStep').hidden=menuStep!==1;$('#menuRoomStep').hidden=menuStep!==2;$('#menuModeStep').hidden=menuStep!==3;$('#menuTranslationSetting').hidden=menuStep!==3;renderControls();updateStartAction();renderJourney();}
+function renderMenuStep(){const titles=['Выберите кошку','Выберите уровень','Выберите тип игры'];$('#startTitle').textContent=titles[menuStep-1];$('#menuStepCount').textContent='Шаг '+menuStep+' из 3';$('#menuCatStep').hidden=menuStep!==1;$('#menuRoomStep').hidden=menuStep!==2;$('#menuModeStep').hidden=menuStep!==3;$('#menuTranslationSetting').hidden=menuStep!==3;renderControls();updateStartAction();renderJourney();}
 function setMenuStep(step){if(!menuOpen)return;menuStep=Math.min(3,Math.max(1,step));renderMenuStep();$('#startScreen').scrollIntoView({behavior:'instant',block:'start'});$('#startTitle').focus({preventScroll:true});}
 
 function renderMenu(){
@@ -381,7 +421,7 @@ function markerSVG(o,vb){const {r,points}=markerLayout(o,vb),answered=Number.isI
  return o.cands.map((cd,k)=>{if(answered&&(k!==o.chosen||cd.correct))return'';const pts=points.filter(p=>p.k===k);const links=pts.length>1?`<path d="M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}" stroke="#f1cb83" stroke-width="3" opacity=".85"/>`:'';
  return `<g class="spot ${answered?'wrong':''}" ${answered?'aria-hidden="true"':`tabindex="0" role="button" aria-label="Место ${k+1}"`} data-spot="${k}">${links}${pts.map(p=>`${Math.hypot(p.x-p.ax,p.y-p.ay)>r*.5?`<path d="M${p.ax},${p.ay}L${p.x},${p.y}" stroke="#ffe2a2" stroke-width="2"/><circle cx="${p.ax}" cy="${p.ay}" r="4" fill="#ffe2a2"/>`:''}<circle cx="${p.x}" cy="${p.y}" r="${r}"/><text x="${p.x}" y="${p.y}" style="font-size:${r*.96}px">${answered?'×':k+1}</text>`).join('')}</g>`}).join('')}
 function labelsSVG(){const rm=room();return Object.entries(rm.refs).filter(([id])=>id!=='room'&&id!=='rug').map(([id,v])=>{const [x,y]=v.tag;return `<text class="scene-label" x="${x}" y="${Math.max(35,y)}" text-anchor="middle" lang="bo">${N[v.noun].bo}</text>`}).join('')}
-function draw(o){lastDraw={...o};if(room().lesson)return drawLesson(o);$('#zoomBtn').hidden=false;updateSceneTools();const rm=room(),vb=viewBox(o),cs=o.show===false?[]:rm.poses[o.id]||[];
+function draw(o){lastDraw={...o};if(room().lesson)return drawLesson(o);$('#sceneHeading').hidden=false;$('.scene-top').classList.remove('story-scene-top');window.CAT_STORIES.clear();$('#storyControls').hidden=true;$('#zoomBtn').hidden=false;updateSceneTools();const rm=room(),vb=viewBox(o),cs=o.show===false?[]:rm.poses[o.id]||[];
  const svg=$('#scene');svg.setAttribute('viewBox',vb.join(' '));svg.setAttribute('role',o.cands&&o.chosen===null?'group':'img');svg.setAttribute('aria-label',o.cands&&o.chosen===null?'Комната. Выберите одно из '+o.cands.length+' пронумерованных мест.':o.alt||'Комната с кошкой.');
  svg.innerHTML=`<image href="${rm.image}" x="0" y="0" width="${rm.width}" height="${rm.height}"/>`+cs.map(p=>catSVG(p,o.animate)).join('')+(o.cands&&o.chosen===null?`<g class="cat-previews">${o.cands.flatMap(cd=>rm.poses[cd.id]).sort((a,b)=>a.y-b.y).map(p=>catSVG(p,false,prefs.room,true)).join('')}</g>`:'')+(prefs.labels?labelsSVG():'')+(o.cands?markerSVG(o,vb):'');
  $('.scene-wrap').style.aspectRatio=String(vb[2]/vb[3]);$('#labelsBtn').setAttribute('aria-pressed',String(prefs.labels));$('#zoomBtn').setAttribute('aria-pressed',String(prefs.zoom));$('#zoomBtn').setAttribute('aria-label',prefs.zoom?'Показать всю комнату':'Приблизить место задания');
@@ -398,7 +438,7 @@ const ROOM_MENU_DETAILS={
  library:{difficulty:'Сложно',description:'Есть фразы с двумя предметами или двумя кошками.'},
  lesson11:{difficulty:'Новые слова',description:'До, вверх, вниз, туда-сюда, для, о, по ту и по эту сторону.'}
 };
-function renderRooms(selected=prefs.room){$('#roomPicker').innerHTML=Object.entries(ROOMS).map(([id,rm])=>{const info=ROOM_MENU_DETAILS[id],topics=rm.lesson?'Движение, назначение и тема речи':(rm.level>1?'Новые: ':'')+rm.focus.map(rel=>R[rel].ru).join(', '),level=rm.lesson?'Урок 11 · Дополнение':'Уровень '+rm.level+' · '+info.difficulty;return `<button class="setup-choice room-choice start-room ${rm.lesson?'lesson-room':''}" data-menu-room="${id}" aria-pressed="${selected===id}" aria-label="${esc(rm.title)}. ${level}. ${esc(topics)}"><img src="${rm.thumbnail}" alt=""/><span class="room-copy"><span class="room-level-line"><span class="room-level">${level}</span><span class="room-selected" aria-hidden="true">✓ Выбрана</span></span><strong>${esc(rm.title)}</strong><span class="room-topics">${esc(topics)}</span><small class="room-description">${rm.lesson?'8 новых предлогов.':rm.allowed.length+' '+(rm.allowed.length===4?'предлога.':'предлогов.')} ${info.description}</small></span></button>`;}).join('')}
+function renderRooms(selected=prefs.room){$('#roomPicker').innerHTML=Object.entries(ROOMS).map(([id,rm])=>{const info=ROOM_MENU_DETAILS[id],topics=rm.lesson?'Сценки с мостиком, прогулкой и угощением':(rm.level>1?'Новые: ':'')+rm.focus.map(rel=>R[rel].ru).join(', '),level=rm.lesson?'Уровень 4 · Дополнение':'Уровень '+rm.level+' · '+info.difficulty;return `<button class="setup-choice room-choice start-room ${rm.lesson?'lesson-room':''}" data-menu-room="${id}" aria-pressed="${selected===id}" aria-label="${esc(rm.title)}. ${level}. ${esc(topics)}"><img src="${rm.thumbnail}" alt=""/><span class="room-copy"><span class="room-level-line"><span class="room-level">${level}</span><span class="room-selected" aria-hidden="true">✓ Выбрана</span></span><strong>${esc(rm.title)}</strong><span class="room-topics">${esc(topics)}</span><small class="room-description">${rm.lesson?'8 новых предлогов.':rm.allowed.length+' '+(rm.allowed.length===4?'предлога.':'предлогов.')} ${info.description}</small></span></button>`;}).join('')}
 
 
 function filterHTML(rid=prefs.room){const rm=ROOMS[rid],focus=rm.lesson?'Все 8 новых предлогов':rm.level===1?'Все 4 предлога':'Новые: '+rm.focus.map(rel=>R[rel].ru).join(', ');return `<option value="focus">${focus}</option>${rm.level>1&&!rm.lesson?'<option value="all">Все '+rm.allowed.length+' предлогов</option>':''}`+'<option value="weak">Повторить мои ошибки</option>'+rm.allowed.map(rel=>`<option value="${rel}">Только «${R[rel].ru}»</option>`).join('')}
@@ -414,15 +454,15 @@ function renderDictionary(){const on=prefs.mode==='learn';$('#dictionary').hidde
 function pictureHTML(q){const rm=ROOMS[q.room];if(rm.lesson)return `<svg class="example-picture" viewBox="0 0 1000 650" role="img" aria-label="${esc(q.ru)}">${window.LESSON11.art(q.scene,currentCat(),true)}</svg>`;return `<svg class="example-picture" viewBox="0 0 ${rm.width} ${rm.height}" role="img" aria-label="${esc(q.ru)}"><image href="${rm.thumbnail}" width="${rm.width}" height="${rm.height}"/>${rm.poses[q.scene].map(p=>catSVG(p,false,q.room,true)).join('')}</svg>`}
 function exampleCard(q,i,bank=false){return `<article class="example-card illustrated-example">${pictureHTML(q)}<div class="example-copy"><p class="example-index">${esc(ROOMS[q.room].title)} · ${R[q.rel].ru}</p><p class="ex-bo bo" lang="bo">${esc(q.head)}<mark>${esc(q.form)}</mark>${esc(q.tail)}</p><p class="ru">${esc(q.ru)}</p><div class="example-actions"><button class="text-link" data-example-id="${q.id}">Показать пример</button><button class="btn subtle" data-practice-id="${q.id}">Тренировать →</button></div></div></article>`}
 function renderExamples(){$('#examples').hidden=prefs.mode!=='learn';$('#examples').innerHTML=prefs.mode==='learn'?`<button class="text-link" data-action="open-bank">Все примеры с картинками · ${catBank().length}</button>`:''}
-function renderLearn(animate=false){$('#main').classList.remove('translation-mode');stopClock();updateTimerOverlay(null);$('#sceneTimer').hidden=true;const q=currentLearn(),r=R[q.rel];draw({id:q.scene,refs:q.refs,animate,alt:prefs.hideRussian?'Учебная иллюстрация.':q.ru});$('#panel').innerHTML=`<div class="entry-heading">${bo(q.form)}<span class="entry-ru">${r.ru}</span></div>${r.forms.length>1?`<p class="variants bo" lang="bo">${r.forms.filter(f=>f!==q.form).map(esc).join(' · ')}</p>`:''}`+sentenceHTML(q,true)+`<p class="ru">${esc(q.ru)}</p>${wordsHTML(q)}${room().lesson?'<p class="meaning-note ru">'+esc(R[q.rel].note)+'</p>':''}${q.rel==='both'?'<p class="meaning-note">В этих заданиях «по обе стороны» показывают две кошки.</p>':''}${['left','right'].includes(q.rel)?'<p class="meaning-note">Слева и справа — со стороны зрителя.</p>':''}<div class="actions"><button class="btn" data-action="next-example">Другой пример ↻</button><button class="btn primary" data-action="practice-current">Потренироваться →</button></div>`+progressHTML();renderDictionary();renderExamples()}
+function renderLearn(animate=false){$('#main').classList.remove('translation-mode');stopClock();updateTimerOverlay(null);$('#sceneTimer').hidden=true;const q=currentLearn(),r=R[q.rel];draw({id:q.scene,refs:q.refs,animate,alt:prefs.hideRussian?'Учебная иллюстрация.':q.ru});$('#panel').innerHTML=`<div class="entry-heading">${bo(q.form)}<span class="entry-ru">${r.ru}</span></div>${r.forms.length>1?`<p class="variants bo" lang="bo">${r.forms.filter(f=>f!==q.form).map(esc).join(' · ')}</p>`:''}`+sentenceHTML(q,true)+`<p class="ru">${esc(q.ru)}</p>${wordsHTML(q)}${room().lesson?'<p class="meaning-note ru">'+esc(R[q.rel].note)+'</p>':''}${q.rel==='both'?'<p class="meaning-note">В этих заданиях «по обе стороны» показывают две кошки.</p>':''}${['left','right'].includes(q.rel)?'<p class="meaning-note">Слева и справа — со стороны зрителя.</p>':''}<div class="actions"><button class="btn" data-action="next-example">Другой пример ↻</button><button class="btn primary" data-action="practice-current">Потренироваться →</button></div>`+progressHTML();renderDictionary();renderExamples();syncStoryControls()}
 function wordsHTML(){return ''}
-function instructionHTML(m){if(room().lesson&&m==='A')return '<p class="mode-instruction">Посмотрите на подсказку и выберите подходящий предлог</p>';return `<p class="mode-instruction">${m==='T'?'Выберите перевод на тибетский.':m==='B'?'Прочитайте фразу и нажмите нужный номер в комнате.':m==='C'?'Выберите подходящий предлог.':'Посмотрите на кошку и выберите подходящий предлог'}</p>`}
+function instructionHTML(m){if(room().lesson&&m==='A')return '<p class="mode-instruction">Посмотрите сценку и выберите подходящий предлог.</p>';return `<p class="mode-instruction">${m==='T'?'Выберите перевод на тибетский.':m==='B'?'Прочитайте фразу и нажмите нужный номер в комнате.':m==='C'?'Выберите подходящий предлог.':'Посмотрите на кошку и выберите подходящий предлог'}</p>`}
 function renderGame(animate=false){
  const s=state();let r=s.rounds[prefs.mode];if(!r){r=s.rounds[prefs.mode]=makeRound(prefs.mode);save();}
  if(r.i>=r.qs.length){renderEnd(r);return;}
  const q=r.qs[r.i],answered=q.chosen!==null,m=questionMode(r,q),translation=m==='C'||m==='T';
  configureScene(m);$('#main').classList.toggle('translation-mode',m==='T');let h=timerHTML(r,q);
- draw({id:q.scene,refs:q.refs,show:m!=='B'||answered,cands:m==='B'?q.cands:null,chosen:q.chosen,animate,alt:m==='T'||((m==='C'||answered||q.hint)&&!prefs.hideRussian)?q.ru:room().lesson?'Наглядная подсказка к фразе.':cap(currentCat().ru)+'. Определите её положение.'});
+ draw({id:q.scene,refs:q.refs,show:m!=='B'||answered,cands:m==='B'?q.cands:null,chosen:q.chosen,animate,alt:m==='T'||((m==='C'||answered||q.hint)&&!prefs.hideRussian)?q.ru:room().lesson?'Сценка с кошкой. Посмотрите, что она сделала.':cap(currentCat().ru)+'. Определите её положение.'});
  h+=instructionHTML(m)+(translation?`<p class="translation-prompt ${m==='C'?'ru':''}">${esc(q.ru)}</p>`:'')+(m==='T'&&!answered?'':sentenceHTML(q,answered||m==='B'))+wordsHTML(q);
  if(m==='B')h+=`<div class="numbers" role="group" aria-label="Варианты мест">${q.cands.map((o,i)=>`<button class="place-number ${answered?(o.correct?'ok':q.chosen===i?'bad':''):''}" data-answer="${i}" ${answered?'disabled':''} aria-label="Место ${i+1}">${i+1}</button>`).join('')}</div>`;
  else h+=`<div class="options ${m==='T'?'translation-options':''}" role="group" aria-label="${m==='T'?'Варианты перевода':'Варианты предлогов'}">${q.options.map((o,i)=>`<button class="option ${answered?(o.rel===q.rel?'ok':q.chosen===i?'bad':'dim'):''}" data-answer="${i}" ${answered?'disabled':''}><span class="number" aria-hidden="true">${i+1}</span>${bo(m==='T'?o.head+o.form+o.tail:o.form)}${answered?`<span class="opt-ru">${o.rel===q.rel?'✓ ':q.chosen===i?'× ':''}${esc(m==='T'?o.ru:R[o.rel].ru)}</span>`:''}</button>`).join('')}</div>`;
@@ -431,14 +471,14 @@ function renderGame(animate=false){
   const feedback=q.timedOut?(m==='B'?'Время вышло. Верное место — '+(q.cands.findIndex(c=>c.correct)+1)+'. Кошка показывает его.':'Время вышло. '+correct):q.ok?'✓ Верно'+(q.hint?' — с подсказкой.':'!'):m==='B'?'Не то место. Кошка показывает правильный ответ.':correct;
   h+=`<p class="feedback ${q.ok?'good':'bad'}">${feedback}</p>${!translation?`<p class="ru">${esc(q.ru)}</p>`:''}<div class="actions"><button class="btn primary" data-action="next">${r.i===r.qs.length-1?'Посмотреть результат':'Следующее задание'} →</button></div>`;
  }else if(!translation&&!prefs.hideRussian)h+=q.hint?`<div class="hint-line"><p class="ru">${esc(q.ru)}</p><p class="small-note">Этот ответ учитывается как ответ с подсказкой.</p></div>`:'<div class="actions"><button class="btn" data-action="hint">Показать перевод</button></div>';
- $('#panel').innerHTML=h+progressHTML(r);renderDictionary();renderExamples();renderControls();renderCompanion();syncTimer(r);
+ $('#panel').innerHTML=h+progressHTML(r);renderDictionary();renderExamples();renderControls();renderCompanion();syncStoryControls();syncTimer(r);
 }
 
 function recordKey(r){return r.mode+'-'+r.filter+'-'+r.length+(r.timeLimit?'-t'+r.timeLimit:'')+((r.optionCount||4)===2?'-a2':'')}
 function renderEnd(r){configureScene('A');stopClock();updateTimerOverlay(null);$('#sceneTimer').hidden=true;const ok=r.qs.filter(q=>q.ok),solo=ok.filter(q=>!q.hint).length,wrong=r.qs.filter(q=>!q.ok),help=r.qs.filter(q=>q.hint).length,s=state(),key=recordKey(r);
  if(!r.recorded){if(!r.retry)s.best[key]=Math.max(+s.best[key]||0,solo);r.recorded=true;save();renderRooms()}
  draw({id:room().lesson?room().focus[0]:prefs.room==='bedroom'?'on_bed':'on_chair',refs:[],animate:false,alt:cap(currentCat().ru)+'. Раунд завершён.'});
- $('#panel').innerHTML=`<h2 class="result-title">Раунд завершён</h2>${timerResultHTML(r)}<p class="score"><strong>${ok.length}</strong> / ${r.qs.length}</p><p class="result-caption">${solo} верно без подсказки.${help?' Подсказка использована в '+help+' заданиях.':''}</p>${!r.retry?`<p class="small-note">Лучший результат в этой теме ${r.timeLimit?'с таймером '+r.timeLimit+' с':'без таймера'}: ${s.best[key]||0} / ${r.qs.length} без подсказок.</p>`:''}${wrong.length?`<ul class="mistakes">${wrong.map(q=>`<li>${bo(q.bo)}<p class="ru">${esc(q.ru)}</p>${q.timedOut?'<span class="timeout-tag">Время вышло</span>':''}</li>`).join('')}</ul>`:'<p class="meaning-note">Ни одной ошибки. Отличная работа!</p>'}<div class="actions">${wrong.length?'<button class="btn primary" data-action="repeat-wrong">Повторить ошибки</button>':''}<button class="btn ${wrong.length?'':'primary'}" data-action="new-round">Ещё раунд ↻</button><button class="btn" data-action="learn">Словарик</button></div>`+progressHTML(r);renderDictionary();renderExamples();renderControls()}
+ $('#panel').innerHTML=`<h2 class="result-title">Раунд завершён</h2>${timerResultHTML(r)}<p class="score"><strong>${ok.length}</strong> / ${r.qs.length}</p><p class="result-caption">${solo} верно без подсказки.${help?' Подсказка использована в '+help+' заданиях.':''}</p>${!r.retry?`<p class="small-note">Лучший результат на этом уровне ${r.timeLimit?'с таймером '+r.timeLimit+' с':'без таймера'}: ${s.best[key]||0} / ${r.qs.length} без подсказок.</p>`:''}${wrong.length?`<ul class="mistakes">${wrong.map(q=>`<li>${bo(q.bo)}<p class="ru">${esc(q.ru)}</p>${q.timedOut?'<span class="timeout-tag">Время вышло</span>':''}</li>`).join('')}</ul>`:'<p class="meaning-note">Ни одной ошибки. Отличная работа!</p>'}<div class="actions">${wrong.length?'<button class="btn primary" data-action="repeat-wrong">Повторить ошибки</button>':''}<button class="btn ${wrong.length?'':'primary'}" data-action="new-round">Ещё раунд ↻</button><button class="btn" data-action="learn">Словарик</button></div>`+progressHTML(r);renderDictionary();renderExamples();renderControls()}
 function render(animate=false){renderCompanion();$('#main').classList.toggle('is-practice',prefs.mode!=='learn');
  $('#sceneHeading').textContent=prefs.mode==='B'?'Найдите место для кошки':room().title;
  if(prefs.mode==='learn')renderLearn(animate);else renderGame(animate);renderControls();storageLabel()}
@@ -458,7 +498,7 @@ function answer(i){
  recordQuestion(r,q);save();renderGame(true);$('#liveStatus').textContent=(q.ok?'Верно. ':'Правильный ответ: ')+(prefs.hideRussian?q.bo:q.ru);
  $('#panel [data-action="next"]')?.focus({preventScroll:true});
 }
-function renderBank(){const all=catBank(),needle=$('#bankSearch').value.trim().toLocaleLowerCase('ru'),rel=$('#bankRel').value,rid=$('#bankLevel').value;const base=rid==='all'?all:relevantBank(rid);const qs=base.filter(q=>(rel==='all'||q.rel===rel)&&(!needle||[q.ru,q.bo].some(t=>t.toLocaleLowerCase('ru').includes(needle))));$('#bankCount').textContent=`Найдено: ${phraseCount(qs.length)}.`;$('#bankGrid').innerHTML=qs.length?qs.map((q,i)=>exampleCard(q,i,true)).join(''):'<p class="empty">Таких фраз не нашлось. Попробуйте другое слово.</p>';$('#bankTitle').textContent='Примеры с картинками';$('#bankLevel option[value="all"]').textContent='Все темы · '+phraseCount(all.length)}
+function renderBank(){const all=catBank(),needle=$('#bankSearch').value.trim().toLocaleLowerCase('ru'),rel=$('#bankRel').value,rid=$('#bankLevel').value;const base=rid==='all'?all:relevantBank(rid);const qs=base.filter(q=>(rel==='all'||q.rel===rel)&&(!needle||[q.ru,q.bo].some(t=>t.toLocaleLowerCase('ru').includes(needle))));$('#bankCount').textContent=`Найдено: ${phraseCount(qs.length)}.`;$('#bankGrid').innerHTML=qs.length?qs.map((q,i)=>exampleCard(q,i,true)).join(''):'<p class="empty">Таких фраз не нашлось. Попробуйте другое слово.</p>';$('#bankTitle').textContent='Примеры с картинками';$('#bankLevel option[value="all"]').textContent='Все уровни · '+phraseCount(all.length)}
 function openBank(){pauseTimer(true);$('#bankSearch').value='';$('#bankRel').value='all';$('#bankLevel').value=prefs.room;renderBank();$('#bankDialog').showModal();$('#bankSearch').focus()}
 function action(act){const s=state(),r=s.rounds[prefs.mode];
  if(act==='open-menu'){openMenu();return;}
@@ -468,6 +508,9 @@ function action(act){const s=state(),r=s.rounds[prefs.mode];
  else if(act==='restart-game'){startGame(true);return;}
  else if(act==='pause-timer'){pauseTimer(true);$('#timerResume')?.focus({preventScroll:true});$('#liveStatus').textContent='Пауза. Оставшееся время сохранено.'}
  else if(act==='resume-timer')resumeTimer();
+ else if(act==='story-replay'){stopClock();window.CAT_STORIES.replay();syncStoryControls();syncTimer(r)}
+ else if(act==='story-toggle'){if(window.CAT_STORIES.state().paused)window.CAT_STORIES.resume();else window.CAT_STORIES.pause();syncStoryControls()}
+ else if(act==='story-finish'){window.CAT_STORIES.finish();syncStoryControls();}
  else if(act==='next-example'){s.learnIndex++;save();renderLearn(true)}
  else if(act==='practice-current'){s.filter=s.learnC;s.rounds.A=makeRound('A');setMode('A')}
  else if(act==='new-round')newRound();
@@ -486,9 +529,9 @@ document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.rep
 $('#bankSearch').addEventListener('input',renderBank);$('#bankRel').addEventListener('change',renderBank);$('#bankLevel').addEventListener('change',renderBank);
 window.addEventListener('resize',()=>{cancelAnimationFrame(resizeToken);resizeToken=requestAnimationFrame(()=>{if(!menuOpen&&lastDraw&&!$('#main').classList.contains('text-mode'))draw({...lastDraw,animate:false})})});
 $('#bankRel').innerHTML='<option value="all">Все предлоги</option>'+Object.keys(R).map(k=>`<option value="${k}">${R[k].ru}</option>`).join('');
-window.__ZHIMI={version:'9.0',pauseTimer,resumeTimer,syncTimer,tickTimer,recordKey,prefs,ROOMS,R,catBank,makeRound,prepare,questionMode,CATS,currentCat,recordQuestion,weakRelations,setCat,practiceSentence,sceneQuestion,draw,answer,action,render,mode:setMode,setRoom,state,validRound,relevantBank,
- qa:()=>({version:'9.0',timeLimits:TIME_LIMITS,rooms:Object.keys(ROOMS).length,sentences:catBank().length,uniqueSentences:new Set(catBank().map(q=>q.bo)).size,scenes:Object.fromEntries(Object.entries(ROOMS).map(([id,r])=>[id,r.scenes.length])),levelBankCounts:Object.fromEntries(Object.keys(ROOMS).map(id=>[id,relevantBank(id).length]))})};
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTimer(true);else if(!menuOpen&&prefs.mode!=='learn'){updateTimer();updateTimerOverlay();}});
+window.__ZHIMI={version:'10.0',pauseTimer,resumeTimer,syncTimer,tickTimer,recordKey,prefs,ROOMS,R,catBank,makeRound,prepare,questionMode,CATS,currentCat,recordQuestion,weakRelations,setCat,practiceSentence,sceneQuestion,draw,answer,action,render,mode:setMode,setRoom,state,validRound,relevantBank,
+ qa:()=>({version:'10.0',timeLimits:TIME_LIMITS,rooms:Object.keys(ROOMS).length,sentences:catBank().length,uniqueSentences:new Set(catBank().map(q=>q.bo)).size,scenes:Object.fromEntries(Object.entries(ROOMS).map(([id,r])=>[id,r.scenes.length])),levelBankCounts:Object.fromEntries(Object.keys(ROOMS).map(id=>[id,relevantBank(id).length]))})};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTimer(true);else if(!menuOpen){if(prefs.mode==='learn')window.CAT_STORIES.resume();else{updateTimer();updateTimerOverlay();}syncStoryControls();}});
 window.addEventListener('pagehide',()=>{pauseTimer(false);save();});
 window.addEventListener('pageshow',e=>{if(e.persisted){if(prefs.mode!=='learn')syncTimer();else updateTimerOverlay(null);}});
 openMenu(true);save();
