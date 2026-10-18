@@ -1,6 +1,7 @@
 /* Warm paper, painted rooms, forest accents. This layer owns the current interface. */
 :root{--bg:#f3eee2;--paper:#fffaf1;--ink:#302f28;--muted:#756f60;--green:#345e4f;--jade:#345e4f;--soft:#e9eee2;--gold:#bc914f;--line:#ddd5c1;--red:#a34f3b;--red-soft:#f9e8df;--shadow:0 16px 55px #5546330b}
-body{background:radial-gradient(ellipse at 0 0,#e6edde 0,transparent 45%),radial-gradient(ellipse at 100% 10%,#efe0c2 0,transparent 50%),#f5f0e6;color:var(--ink)}
+html{min-height:100%;background:#f5f0e6}
+body{min-height:100vh;min-height:100svh;background:radial-gradient(ellipse at 0 0,#e6edde 0,transparent 45%),radial-gradient(ellipse at 100% 10%,#efe0c2 0,transparent 50%),#f5f0e6;background-repeat:no-repeat;color:var(--ink)}
 button,input,select{font-family:'Golos Text',system-ui,sans-serif}
 button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #6e9b84;outline-offset:3px}
 h1,.mast h1,.start-header h1{color:#744130}
