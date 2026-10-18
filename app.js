@@ -5,8 +5,11 @@ const R=D.relations,N=D.nouns,COL=D.colors,ROOMS=D.rooms;
 // This saved-answer ID used to put a cat beyond the tabletop, against the wall.
 // Keep the ID for existing rounds and give the decoy a clear patch of floor.
 Object.assign(ROOMS.tea.poses.left_lamp[0],{x:60,y:677,width:90});
-// Leave a clear strip of floor under the rear cat, below the wall skirting.
-Object.assign(ROOMS.tea.poses.behind_box[0],{y:548});
+// Let the cat peek around the rear corner; its paws stay behind the chest.
+Object.assign(ROOMS.tea.poses.behind_box[0],{x:789,y:526,width:145});
+// Follow the painted lid and front rim instead of masking the surrounding wall.
+ROOMS.tea.occluders.box.path='M785 358 L989 358 L1010 437 L1008 527 L975 560 L757 549 L757 449 L811 431 Z';
+ROOMS.tea.occluders.boxfront.path='M757 449 L972 453 L1010 437 L1008 527 L975 560 L757 549 Z';
 // Raise the face above the chair rung without moving the paws off the floor.
 Object.assign(ROOMS.tea.poses.under_chair[0],{width:110});
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -420,7 +423,7 @@ function catSVG(p,animate,rid=prefs.room,staticImage=false){const rm=ROOMS[rid],
  const foreground=(p.mask||[]).map(id=>rm.occluders[id]).filter(Boolean);if(!foreground.length)return cat;
  const id='cat-occlusion-'+(++catMaskSerial),filter=id+'-black';
  // Mask this cat only. Repainting furniture here could cover a different candidate cat.
- return `<defs><filter id="${filter}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${rm.width}" height="${rm.height}" style="mask-type:luminance"><rect width="${rm.width}" height="${rm.height}" fill="white"/>${foreground.map(a=>{const b=a.box;return `<image href="${a.uri}" x="${b[0]}" y="${b[1]}" width="${b[2]-b[0]}" height="${b[3]-b[1]}" filter="url(#${filter})"/>`;}).join('')}</mask></defs><g mask="url(#${id})">${cat}</g>`;
+ return `<defs><filter id="${filter}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${rm.width}" height="${rm.height}" style="mask-type:luminance"><rect width="${rm.width}" height="${rm.height}" fill="white"/>${foreground.map(a=>{if(a.path)return `<path d="${a.path}" fill="black"/>`;const b=a.box;return `<image href="${a.uri}" x="${b[0]}" y="${b[1]}" width="${b[2]-b[0]}" height="${b[3]-b[1]}" filter="url(#${filter})"/>`;}).join('')}</mask></defs><g mask="url(#${id})">${cat}</g>`;
 }
 
 function markerLayout(o,vb){const rm=room(),screen=$('#scene').clientWidth||800;const r=Math.max(26,Math.min(62,vb[2]/screen*18));
