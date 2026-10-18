@@ -441,3 +441,37 @@ h1{font-size:34px;line-height:1.15;letter-spacing:-1px;white-space:nowrap}
 /* Solid cats and independent occlusion keep furniture from painting over other choices. */
 .cat-previews{opacity:1}
 #scene .appear{animation:none!important}
+
+/* Explain what each room teaches before moving to the game type. */
+.menu-room-help{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.6;max-width:62ch}
+.start-room .room-copy{display:flex;flex-direction:column;align-items:stretch;gap:7px;flex:1;min-width:0}
+.start-room .room-level-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 7px}
+.start-room .room-level{font-size:11px;font-weight:500;color:var(--green);line-height:1.4}
+.start-room .room-selected{font-size:10px;font-weight:500;color:var(--green);visibility:hidden;line-height:1.4}
+.start-room[aria-pressed=true] .room-selected{visibility:visible}
+.start-room .room-topics{font-size:13px;line-height:1.55;color:var(--ink)}
+.start-room .room-description{margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
+.start-room{min-height:270px}
+@media(max-width:800px){
+ .menu-room-help{font-size:12px;margin-bottom:12px;line-height:1.5}
+ .start-room{min-height:126px;align-items:center}
+ .start-room img{width:94px;height:90px;object-fit:cover}
+ .start-room .room-copy{gap:5px}
+ .start-room .room-level{font-size:10px}
+ .start-room .room-selected{font-size:9px}
+ .start-room .room-topics{font-size:12px;line-height:1.45}
+ .start-room .room-description{font-size:10px;line-height:1.45}
+}
+@media(max-width:350px){
+ .start-room{padding:8px;gap:9px}
+ .start-room img{width:70px;height:78px}
+ .start-room .room-level-line{gap:2px 5px}
+ .start-room .room-level{font-size:9px}
+ .start-room .room-selected{font-size:8px}
+ .start-room .room-topics{font-size:11px}
+}
+
+.menu-relation-help{margin:0 1px 10px;font-size:12px;line-height:1.55;color:var(--muted)}
+.menu-relation-help:empty{display:none}
+#menuPracticeSettings[hidden]+.menu-relation-help{display:none}
+@media(max-width:800px){.menu-relation-help{font-size:10px;margin-bottom:8px}}
