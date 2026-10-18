@@ -234,7 +234,7 @@ h1,.mast h1,.start-header h1{color:#744130}
 .cover-kicker{font-size:11px;line-height:1.6;letter-spacing:.5px;color:#718067;margin-bottom:15px}
 .cover-title{font:clamp(46px,5.3vw,68px)/1.04 Georgia,serif;letter-spacing:-1.5px;color:#75432f;max-width:8ch}
 .cover-intro{font-size:14px;line-height:1.8;color:#7a705c;max-width:23ch;margin:22px 0 28px}
-.cover-play{display:flex;align-items:center;justify-content:space-between;gap:46px;background:#345e4f;border:1px solid #345e4f;color:#fff9e9;border-radius:15px;min-height:54px;padding:12px 21px;font-size:15px;box-shadow:0 6px 20px #345e4f1c;min-width:203px}
+.cover-play{display:flex;align-items:center;justify-content:space-between;gap:46px;background:#345e4f;border:1px solid #345e4f;color:#fff9e9;border-radius:15px;min-height:54px;padding:12px 21px;margin-top:28px;font-size:15px;box-shadow:0 6px 20px #345e4f1c;min-width:203px}
 .cover-play:hover{background:#294e41}.cover-play span{font-size:22px;font-weight:400;line-height:1}
 .cover-results{background:none;color:#857352;font-size:11px;border-bottom:1px solid #c9b995;padding:2px 0 4px;margin:22px 0 0 4px}
 .start-header .start-game-name{background:none;border:0;padding:0;text-align:left}.start-header button.start-game-name:hover{text-decoration:underline;text-underline-offset:3px}
