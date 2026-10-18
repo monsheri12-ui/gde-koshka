@@ -247,3 +247,197 @@ h1{font-size:34px;line-height:1.15;letter-spacing:-1px;white-space:nowrap}
  .relation-picker .tile .bo{font-size:23px}
 }
 @media(max-width:350px){.learn-current{gap:6px}.learn-current .bo{font-size:21px}.learn-current>span:last-child{font-size:10px;max-width:70px;line-height:1.3}.learn-change{font-size:9px}}
+
+/* Start menu and a larger, focused play area. */
+.app{max-width:1440px;padding:16px 20px 20px}
+.start-screen{max-width:1040px;margin:0 auto;padding:20px 22px 10px;border:1px solid var(--line);border-radius:20px;background:#fffaf0b8;box-shadow:var(--shadow)}
+.start-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:14px}
+.start-header h1{font-size:34px}
+.start-header p{font-size:12px;color:var(--muted);margin-top:5px}
+.start-header .text-link{font-size:11px;min-height:40px;flex:none}
+#startTitle:focus{outline:none}
+.setup-group{padding:0;margin:0 0 14px;border:0;min-width:0}
+.setup-group legend{padding:0;margin-bottom:7px;font-size:13px;font-weight:600;color:var(--ink)}
+.setup-choice{background:#fffaf0;border:1px solid var(--line);border-radius:11px;min-width:0;color:var(--ink)}
+.setup-choice[aria-pressed=true]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold);background:#f2e5cd}
+.setup-choice:hover{border-color:var(--gold)}
+.start-cats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.start-cat{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;min-height:94px}
+.start-cat img{width:100%;height:62px;object-fit:contain}
+.start-cat span{font-size:11px;line-height:1.3;text-align:center}
+.start-rooms{gap:8px;margin:0}
+.start-room{justify-content:flex-start;padding:7px;gap:10px;min-height:66px;text-align:left}
+.start-room img{width:72px;height:48px;object-fit:cover;border-radius:7px;flex:none}
+.start-room>span{min-width:0}
+.start-room strong{display:block;font:500 13px/1.35 'Golos Text',system-ui,sans-serif}
+.start-room small{display:block;font-size:10px;line-height:1.45;color:var(--muted);margin-top:2px}
+.start-modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.start-mode{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;padding:10px 11px;min-height:70px;text-align:left}
+.start-mode strong{font-size:12px;font-weight:500;line-height:1.35}
+.start-mode>span{font-size:10px;line-height:1.5;color:var(--muted)}
+#practiceControls{margin:0;display:block}
+#practiceControls .selects{display:grid;grid-template-columns:1.5fr 1fr 1.15fr 1fr;gap:10px;width:100%}
+#practiceControls .select-label{display:flex;flex-direction:column;align-items:stretch;gap:4px;font-size:11px;min-width:0}
+#practiceControls select{min-height:44px;width:100%;min-width:0!important;font-size:12px;padding:8px 24px 8px 9px}
+.start-actions{position:sticky;bottom:0;display:flex;gap:9px;padding:12px 0 3px;border-top:1px solid var(--line);background:#fffaf0;z-index:3}
+.start-actions .btn{min-height:46px;padding:10px 16px}
+.start-button{font-size:14px}
+#restartButton{font-size:12px}
+.play-header{margin-bottom:12px;align-items:center}
+.play-header h1{font-size:30px}
+.session-summary{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+.game-companion{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.game-companion img{display:block;width:38px;height:43px;object-fit:contain}
+.menu-button{min-height:44px;min-width:80px;padding:8px 13px;background:var(--paper)}
+.main{grid-template-columns:minmax(0,1.85fr) minmax(340px,1fr);gap:16px}
+.scene-card{box-shadow:0 4px 18px #5b3d2612}
+#scene{image-rendering:auto}
+@media(max-width:1000px) and (min-width:801px){
+ .start-room img{width:52px;height:42px}
+ .start-room strong{font-size:12px}
+ .start-room small{font-size:9px}
+ .main{grid-template-columns:minmax(0,1.5fr) minmax(310px,1fr);gap:12px}
+}
+@media(max-width:800px){
+ .app{padding:10px}
+ .start-screen{padding:14px 12px 7px;border-radius:15px}
+ .start-header{align-items:flex-start;gap:8px;margin-bottom:13px}
+ .start-header h1{font-size:29px}
+ .start-header p{font-size:11px;line-height:1.5;max-width:24ch}
+ .start-header .text-link{font-size:10px;min-height:36px}
+ .setup-group{margin-bottom:13px}
+ .setup-group legend{font-size:12px;margin-bottom:6px}
+ .start-cats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+ .start-cat{padding:5px 2px;min-height:82px;gap:3px}
+ .start-cat img{height:52px}
+ .start-cat span{font-size:10px}
+ .start-rooms{gap:5px}
+ .start-room{display:flex;flex-direction:column;justify-content:flex-start;align-items:center;padding:6px 4px;gap:5px;min-height:106px;text-align:center}
+ .start-room img{width:100%;height:44px;border-radius:5px}
+ .start-room strong{font-size:10px;line-height:1.3}
+ .start-room small{font-size:9px;line-height:1.3}
+ .start-modes{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ .start-mode{padding:8px 9px;min-height:65px;gap:3px}
+ .start-mode:last-child{grid-column:1/-1;min-height:52px}
+ .start-mode strong{font-size:11px}
+ .start-mode>span{font-size:10px;line-height:1.4}
+ #practiceControls .selects{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #practiceControls select{font-size:11px}
+ .start-actions{padding-top:10px;gap:7px}
+ .start-actions .btn{min-height:46px;padding:8px 9px;font-size:12px}
+ #restartButton{font-size:10px}
+ .play-header{margin-bottom:9px;gap:8px}
+ .play-header h1{font-size:26px}
+ .session-summary{font-size:10px;max-width:29ch}
+ .game-companion img{width:30px;height:38px}
+ .game-companion>span{display:none}
+ .menu-button{min-width:66px;font-size:12px;padding:8px 10px}
+ .main{grid-template-columns:minmax(0,1fr);gap:10px}
+}
+@media(max-width:350px){
+ .app{padding:8px}
+ .start-screen{padding:12px 9px 6px}
+ .start-header h1{font-size:26px}
+ .start-header p{font-size:10px}
+ .start-cat span{font-size:9px}
+ .start-room img{height:36px}
+ .start-room{min-height:99px}
+ .start-room small{font-size:8px}
+ .start-mode{padding:7px;min-height:70px}
+ .start-mode strong{font-size:10px}
+ .start-mode>span{font-size:9px}
+ .play-header h1{font-size:24px}
+ .session-summary{max-width:25ch}
+}
+
+/* One decision per start screen. */
+.start-screen{max-width:940px;min-height:440px;padding:24px 26px 16px}
+.start-header{align-items:flex-start;margin-bottom:22px}
+.start-header h1{font-size:32px;white-space:normal;max-width:27ch;line-height:1.18;margin-top:5px}
+.start-header .start-game-name{margin:0;font-size:12px;color:var(--green)}
+.start-header .start-step-count{margin-top:9px;font-size:11px;color:var(--muted)}
+.start-cats{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.start-cat{min-height:134px;padding:9px 6px;gap:6px}
+.start-cat img{height:98px}
+.start-cat span{font-size:12px}
+.start-rooms{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.start-room{display:flex;flex-direction:column;align-items:stretch;padding:9px;gap:10px;text-align:left;min-height:206px}
+.start-room img{width:100%;height:132px;object-fit:cover;border-radius:8px}
+.start-room strong{font-size:14px}
+.start-room small{font-size:11px;margin-top:4px}
+.start-modes{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.start-mode{min-height:80px;padding:12px 13px}
+.start-mode strong{font-size:13px}
+.start-mode>span{font-size:11px}
+.start-mode:last-child{grid-column:auto;min-height:80px}
+.start-actions{margin-top:16px;padding-top:14px;background:#fffaf0}
+#menuBackButton{min-width:86px}
+#menuNextButton{min-width:160px;margin-left:auto;flex-grow:0}
+.translation-toggle{display:flex;align-items:center;gap:8px;min-height:36px;font-size:12px;line-height:1.5;color:var(--muted);cursor:pointer}
+.translation-toggle input{width:17px;height:17px;margin:0;accent-color:var(--green);cursor:pointer;flex:none}
+.menu-translation-toggle{margin-top:4px}
+.play-options{display:flex;justify-content:flex-end;margin:-6px 0 7px}
+.play-options .translation-toggle{min-height:30px;font-size:11px}
+.hide-russian .ru,.hide-russian .entry-ru,.hide-russian .t-ru,.hide-russian .opt-ru,.hide-russian .ru-meaning,.hide-russian .sentence-words dd,.hide-russian .learn-current>span:last-child{display:none!important}
+.main.translation-mode{grid-template-columns:minmax(0,1.35fr) minmax(420px,1fr)}
+.translation-options{grid-template-columns:minmax(0,1fr);gap:8px}
+.translation-options .option{align-items:flex-start;text-align:left;padding:10px 14px;min-height:74px}
+.translation-options .option .bo{font-size:22px;line-height:1.95}
+.translation-options .opt-ru{font-size:11px}
+@media(max-width:800px){
+ .start-screen{min-height:0;padding:18px 13px 10px}
+ .start-header{margin-bottom:18px;gap:8px}
+ .start-header h1{font-size:27px;max-width:20ch}
+ .start-header .start-game-name{font-size:11px}
+ .start-header .start-step-count{font-size:10px;margin-top:7px}
+ .start-cats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .start-cat{min-height:107px;padding:6px 3px;gap:5px}
+ .start-cat img{height:75px}
+ .start-cat span{font-size:10px}
+ .start-rooms{grid-template-columns:minmax(0,1fr);gap:8px}
+ .start-room{flex-direction:row;align-items:center;padding:8px;gap:11px;min-height:98px}
+ .start-room img{width:112px;height:78px;object-fit:cover;flex:none}
+ .start-room strong{font-size:13px}
+ .start-room small{font-size:11px;line-height:1.5}
+ .start-modes{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .start-mode,.start-mode:last-child{min-height:85px;padding:10px 9px;grid-column:auto}
+ .start-mode strong{font-size:12px}
+ .start-mode>span{font-size:10px}
+ .start-actions{margin-top:12px;padding-top:11px}
+ #menuBackButton{min-width:62px;font-size:11px}
+ #menuNextButton{min-width:130px}
+ .translation-toggle{font-size:11px;min-height:38px}
+ .play-options{margin:-4px 0 5px}
+ .play-options .translation-toggle{min-height:30px;font-size:11px}
+ .main.translation-mode{grid-template-columns:minmax(0,1fr)}
+ .translation-options .option{padding:9px 12px}
+ .translation-options .option .bo{font-size:23px;line-height:1.95}
+}
+@media(max-width:350px){
+ .start-screen{padding:15px 10px 8px}
+ .start-header h1{font-size:24px}
+ .start-cat img{height:65px}
+ .start-cat{min-height:99px}
+ .start-cat span{font-size:9px}
+ .start-room img{width:94px;height:66px}
+ .start-room{gap:8px;min-height:86px}
+ .start-room strong{font-size:12px}
+ .start-room small{font-size:10px}
+ .start-mode strong{font-size:11px}
+ .start-mode>span{font-size:9px}
+}
+.menu-mode-help{display:none}
+.start-mode,.start-mode:last-child{min-height:68px;padding:10px 12px}
+@media(max-width:800px){
+ .start-mode,.start-mode:last-child{min-height:48px;padding:8px 9px;justify-content:center}
+ .start-mode strong{font-size:11px;line-height:1.35}
+ .start-mode>span{display:none}
+ .menu-mode-help{display:block;margin:7px 1px 0;font-size:11px;line-height:1.5;color:var(--muted)}
+ .start-screen .setup-group{margin-bottom:11px}
+ .start-screen #practiceControls .select-label{font-size:10px;gap:3px}
+ .start-screen #practiceControls .selects{gap:7px}
+ .start-header{margin-bottom:15px}
+}
+/* Solid cats and independent occlusion keep furniture from painting over other choices. */
+.cat-previews{opacity:1}
+#scene .appear{animation:none!important}
