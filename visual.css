@@ -312,3 +312,21 @@ h1,.mast h1,.start-header h1{color:#744130}
  .start-cat img{height:clamp(112px,18vh,135px);height:clamp(112px,18svh,135px)}
  .start-mode,.start-mode:last-child{min-height:94px;padding-top:13px;padding-bottom:13px}
 }
+
+/* Give the painting the main share of the play area. */
+@media(min-width:1051px){
+ .main:not(.text-mode){grid-template-columns:minmax(0,1fr) clamp(310px,25vw,420px);gap:14px}
+ .main:not(.text-mode) .task-card{padding:18px}
+}
+@media(min-width:801px) and (max-width:1050px){
+ .main:not(.text-mode){grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:800px){
+ .scene-top:not(.story-scene-top){flex-direction:row;align-items:center;flex-wrap:wrap;gap:5px;padding:7px 10px}
+ .scene-top:not(.story-scene-top) .scene-tools{flex:1;min-width:0;flex-wrap:wrap;justify-content:flex-end}
+ .scene-top:not(.story-scene-top) .toggle{margin-right:0}
+}
+@media(min-width:1100px){
+ #playScreen{position:relative}
+ .play-options{position:absolute;right:245px;top:2px;margin:0}
+}

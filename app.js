@@ -21,9 +21,9 @@ const CATS=[
  {id:'siamese',name:'Коричнево-белая',ru:'коричнево-белая кошка',plural:'коричнево-белые кошки',bo:'ཞི་མི་སྨུག་དཀར་ཁྲ་བོ་',src:'cat-brown-white.webp',heightRatio:1}
 ];
 let menuOpen=true,menuDraft=null,menuStep=1;
-const prefs={version:5,timerVersion:1,edition:10,room:'bedroom',mode:'learn',cat:'original',labels:false,zoom:true,hideRussian:false,states:{}};
+const prefs={version:5,timerVersion:1,edition:10,sceneVersion:1,room:'bedroom',mode:'learn',cat:'original',labels:false,zoom:true,hideRussian:false,states:{}};
 if(loaded&&loaded.version===5){if(ROOMS[loaded.room])prefs.room=loaded.room;if(['learn','A','B','C','M','T'].includes(loaded.mode))prefs.mode=loaded.mode;if(CATS.some(c=>c.id===loaded.cat))prefs.cat=loaded.cat;for(const k of ['labels','zoom','hideRussian'])if(typeof loaded[k]==='boolean')prefs[k]=loaded[k];if(loaded.states&&typeof loaded.states==='object'&&!Array.isArray(loaded.states))prefs.states=loaded.states}
-if(!loaded||!loaded.edition||loaded.edition<8)prefs.zoom=true;
+if(!loaded||!loaded.edition||loaded.edition<8||!loaded.sceneVersion)prefs.zoom=true;
 if(ROOMS[prefs.room].lesson&&prefs.mode==='B')prefs.mode='A';
 const currentCat=()=>CATS.find(c=>c.id===prefs.cat)||CATS[0];
 const phraseCount=n=>n+' '+(n%100>=11&&n%100<=14?'фраз':n%10===1?'фраза':n%10>=2&&n%10<=4?'фразы':'фраз');
@@ -401,9 +401,11 @@ function viewBox(o){const rm=room();if(!prefs.zoom)return [0,0,rm.width,rm.heigh
  let boxes=(o.refs||[]).filter(id=>id!=='room').map(id=>rm.refs[id]?.bounds).filter(Boolean);let poses=o.cands?o.cands.flatMap(c=>rm.poses[c.id]):rm.poses[o.id]||[];
  if(o.id==='out_room'&&!o.cands)boxes=[rm.refs.door?.bounds||[rm.width*.78,rm.height*.2,rm.width,rm.height*.85]];
  boxes=boxes.concat(poses.map(poseBounds));if(!boxes.length)return[0,0,rm.width,rm.height];
- let x1=Math.min(...boxes.map(b=>b[0]))-38,y1=Math.min(...boxes.map(b=>b[1]))-28,x2=Math.max(...boxes.map(b=>b[2]))+38,y2=Math.max(...boxes.map(b=>b[3]))+28;
- const ratio=matchMedia('(max-width:800px)').matches?1.3:1.65;let w=Math.max(rm.width*.46,x2-x1),h=Math.max(rm.height*.5,y2-y1);if(w/h>ratio)h=w/ratio;else w=h*ratio;
- if(w>rm.width){h*=rm.width/w;w=rm.width}if(h>rm.height){w*=rm.height/h;h=rm.height}
+ let x1=Math.min(...boxes.map(b=>b[0]))-28,y1=Math.min(...boxes.map(b=>b[1]))-24,x2=Math.max(...boxes.map(b=>b[2]))+28,y2=Math.max(...boxes.map(b=>b[3]))+24;
+ const compact=matchMedia('(max-width:1050px)').matches,ratio=compact?1.12:1.65;
+ let w=Math.min(rm.width,Math.max(rm.width*(compact?.32:.38),x2-x1)),h=Math.min(rm.height,Math.max(rm.height*(compact?.34:.42),y2-y1));
+ // Keep every target in view when a wide pair of objects reaches the room edges.
+ if(w/h>ratio)h=Math.min(rm.height,w/ratio);else w=Math.min(rm.width,h*ratio);
  return [Math.max(0,Math.min(rm.width-w,(x1+x2-w)/2)),Math.max(0,Math.min(rm.height-h,(y1+y2-h)/2)),w,h]}
 let catMaskSerial=0;
 function catSVG(p,animate,rid=prefs.room,staticImage=false){const rm=ROOMS[rid],h=p.width*currentCat().heightRatio,flip=p.flip?-1:1;const shadow=`<ellipse cx="${p.x+3}" cy="${p.y-1}" rx="${p.width*.33}" ry="${p.width*.045}" fill="#27170c" opacity=".3"/>`;
@@ -421,10 +423,10 @@ function markerLayout(o,vb){const rm=room(),screen=$('#scene').clientWidth||800;
 function markerSVG(o,vb){const {r,points}=markerLayout(o,vb),answered=Number.isInteger(o.chosen);
  return o.cands.map((cd,k)=>{if(answered&&(k!==o.chosen||cd.correct))return'';const pts=points.filter(p=>p.k===k);const links=pts.length>1?`<path d="M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}" stroke="#f1cb83" stroke-width="3" opacity=".85"/>`:'';
  return `<g class="spot ${answered?'wrong':''}" ${answered?'aria-hidden="true"':`tabindex="0" role="button" aria-label="Место ${k+1}"`} data-spot="${k}">${links}${pts.map(p=>`${Math.hypot(p.x-p.ax,p.y-p.ay)>r*.5?`<path d="M${p.ax},${p.ay}L${p.x},${p.y}" stroke="#ffe2a2" stroke-width="2"/><circle cx="${p.ax}" cy="${p.ay}" r="4" fill="#ffe2a2"/>`:''}<circle cx="${p.x}" cy="${p.y}" r="${r}"/><text x="${p.x}" y="${p.y}" style="font-size:${r*.96}px">${answered?'×':k+1}</text>`).join('')}</g>`}).join('')}
-function labelsSVG(){const rm=room();return Object.entries(rm.refs).filter(([id])=>id!=='room'&&id!=='rug').map(([id,v])=>{const [x,y]=v.tag;return `<text class="scene-label" x="${x}" y="${Math.max(35,y)}" text-anchor="middle" lang="bo">${N[v.noun].bo}</text>`}).join('')}
+function labelsSVG(vb){const rm=room(),[left,top,w,h]=vb,mx=Math.min(90,w*.18),my=48;return Object.entries(rm.refs).filter(([id,v])=>{if(id==='room'||id==='rug')return false;const [x1,y1,x2,y2]=v.bounds,area=(x2-x1)*(y2-y1),visible=Math.max(0,Math.min(x2,left+w)-Math.max(x1,left))*Math.max(0,Math.min(y2,top+h)-Math.max(y1,top));return visible>=area*.3}).map(([id,v])=>{const x=Math.max(left+mx,Math.min(left+w-mx,v.tag[0])),y=Math.max(top+my,Math.min(top+h-my,v.tag[1]));return `<text class="scene-label" x="${x}" y="${y}" text-anchor="middle" lang="bo">${N[v.noun].bo}</text>`}).join('')}
 function draw(o){lastDraw={...o};if(room().lesson)return drawLesson(o);$('#sceneHeading').hidden=false;$('.scene-top').classList.remove('story-scene-top');window.CAT_STORIES.clear();$('#storyControls').hidden=true;$('#zoomBtn').hidden=false;updateSceneTools();const rm=room(),vb=viewBox(o),cs=o.show===false?[]:rm.poses[o.id]||[];
  const svg=$('#scene');svg.setAttribute('viewBox',vb.join(' '));svg.setAttribute('role',o.cands&&o.chosen===null?'group':'img');svg.setAttribute('aria-label',o.cands&&o.chosen===null?'Комната. Выберите одно из '+o.cands.length+' пронумерованных мест.':o.alt||'Комната с кошкой.');
- svg.innerHTML=`<image href="${rm.image}" x="0" y="0" width="${rm.width}" height="${rm.height}"/>`+cs.map(p=>catSVG(p,o.animate)).join('')+(o.cands&&o.chosen===null?`<g class="cat-previews">${o.cands.flatMap(cd=>rm.poses[cd.id]).sort((a,b)=>a.y-b.y).map(p=>catSVG(p,false,prefs.room,true)).join('')}</g>`:'')+(prefs.labels?labelsSVG():'')+(o.cands?markerSVG(o,vb):'');
+ svg.innerHTML=`<image href="${rm.image}" x="0" y="0" width="${rm.width}" height="${rm.height}"/>`+cs.map(p=>catSVG(p,o.animate)).join('')+(o.cands&&o.chosen===null?`<g class="cat-previews">${o.cands.flatMap(cd=>rm.poses[cd.id]).sort((a,b)=>a.y-b.y).map(p=>catSVG(p,false,prefs.room,true)).join('')}</g>`:'')+(prefs.labels?labelsSVG(vb):'')+(o.cands?markerSVG(o,vb):'');
  $('.scene-wrap').style.aspectRatio=String(vb[2]/vb[3]);$('#labelsBtn').setAttribute('aria-pressed',String(prefs.labels));$('#zoomBtn').setAttribute('aria-pressed',String(prefs.zoom));$('#zoomBtn').setAttribute('aria-label',prefs.zoom?'Показать всю комнату':'Приблизить место задания');
 }
 
