@@ -86,8 +86,8 @@ function mount(svg,options){
  svg.innerHTML=art(options.id,options.cat,false,options.labels);
  const a={svg,key,id:options.id,spec,cat:options.cat,options,elapsed,loading:true,paused:!!options.paused,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,error:false,raf:0,last:0,lastPhase:null,doneNotified:false,
   actor:svg.querySelector('[data-story-actor]'),facing:svg.querySelector('[data-story-facing]'),walk:svg.querySelector('[data-story-walk]'),idle:svg.querySelector('[data-story-idle]'),call:svg.querySelector('[data-story-call]'),focus:svg.querySelector('[data-story-focus]')};
- active=a;paint(a);notify();
- Promise.all([asset('story-'+spec.background),asset('walk-'+coatId(options.cat)),options.cat.src].map(imageReady)).then(()=>{if(active!==a)return;a.loading=false;notify();if(a.elapsed>=spec.duration)complete(a);else if(!a.paused)resume();}).catch(()=>{if(active!==a)return;a.loading=false;a.error=true;notify();});
+ active=a;const loading=window.GAME_LOADER?.scene(3);a.loadingScreen=loading;paint(a);notify();
+ Promise.all([asset('story-'+spec.background),asset('walk-'+coatId(options.cat)),options.cat.src].map(src=>imageReady(src).then(()=>loading?.step()))).then(()=>{loading?.finish();if(active!==a)return;a.loading=false;notify();if(a.elapsed>=spec.duration)complete(a);else if(!a.paused)resume();}).catch(()=>{loading?.cancel();if(active!==a)return;a.loading=false;a.error=true;notify();});
  return a;
 }
 function replay(){const a=active;if(!a)return;
@@ -96,6 +96,6 @@ function replay(){const a=active;if(!a)return;
  pause();a.elapsed=0;a.doneNotified=false;a.lastPhase=null;a.error=false;paint(a);resume();
 }
 function finish(){const a=active;if(!a)return;pause();complete(a);a.paused=false;}
-function clear(){pause();active=null;}
+function clear(){active?.loadingScreen?.cancel();pause();active=null;}
 window.CAT_STORIES={W,H,scenes,sample,pointAt,art,mount,pause,resume,replay,finish,clear,blocked,state,coatId};
 })();

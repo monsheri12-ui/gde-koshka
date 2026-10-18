@@ -359,8 +359,9 @@ function renderMenu(){
  renderMenuModes();
  renderMenuStep();
 }
-function openMenu(initial=false){pauseTimer(false);menuOpen=true;menuStep=1;menuDraft=menuSelection();$('#playScreen').hidden=true;$('#startScreen').hidden=false;renderMenu();applyTranslationVisibility();storageLabel();if(!initial){$('#startScreen').scrollIntoView({behavior:'instant',block:'start'});$('#startTitle').focus({preventScroll:true});}$('#liveStatus').textContent=initial?'':'Игра на паузе. Выберите настройки или продолжите раунд.';}
-function showPlayScreen(){menuOpen=false;$('#startScreen').hidden=true;$('#playScreen').hidden=false;}
+function openMenu(initial=false){$('#coverScreen').hidden=true;pauseTimer(false);menuOpen=true;menuStep=1;menuDraft=menuSelection();$('#playScreen').hidden=true;$('#startScreen').hidden=false;renderMenu();applyTranslationVisibility();storageLabel();if(!initial){$('#startScreen').scrollIntoView({behavior:'instant',block:'start'});$('#startTitle').focus({preventScroll:true});}$('#liveStatus').textContent=initial?'':'Игра на паузе. Выберите настройки или продолжите раунд.';}
+function showCover(initial=false){pauseTimer(false);menuOpen=true;$('#playScreen').hidden=true;$('#startScreen').hidden=true;$('#coverScreen').hidden=false;if(!initial){$('#coverScreen').scrollIntoView({behavior:'instant',block:'start'});$('#coverTitle').focus({preventScroll:true});}}
+function showPlayScreen(){$('#coverScreen').hidden=true;menuOpen=false;$('#startScreen').hidden=true;$('#playScreen').hidden=false;}
 function startGame(forceNew=false){
  if(!menuDraft)return;
  const d=menuDraft,previous=matchingMenuRound();stopClock();
@@ -501,7 +502,9 @@ function answer(i){
 function renderBank(){const all=catBank(),needle=$('#bankSearch').value.trim().toLocaleLowerCase('ru'),rel=$('#bankRel').value,rid=$('#bankLevel').value;const base=rid==='all'?all:relevantBank(rid);const qs=base.filter(q=>(rel==='all'||q.rel===rel)&&(!needle||[q.ru,q.bo].some(t=>t.toLocaleLowerCase('ru').includes(needle))));$('#bankCount').textContent=`Найдено: ${phraseCount(qs.length)}.`;$('#bankGrid').innerHTML=qs.length?qs.map((q,i)=>exampleCard(q,i,true)).join(''):'<p class="empty">Таких фраз не нашлось. Попробуйте другое слово.</p>';$('#bankTitle').textContent='Примеры с картинками';$('#bankLevel option[value="all"]').textContent='Все уровни · '+phraseCount(all.length)}
 function openBank(){pauseTimer(true);$('#bankSearch').value='';$('#bankRel').value='all';$('#bankLevel').value=prefs.room;renderBank();$('#bankDialog').showModal();$('#bankSearch').focus()}
 function action(act){const s=state(),r=s.rounds[prefs.mode];
- if(act==='open-menu'){openMenu();return;}
+ if(act==='enter-game'){openMenu();return;}
+ else if(act==='show-cover'){showCover();return;}
+ else if(act==='open-menu'){openMenu();return;}
  else if(act==='menu-next'){setMenuStep(menuStep+1);return;}
  else if(act==='menu-back'){setMenuStep(menuStep-1);return;}
  else if(act==='start-game'){startGame();return;}
@@ -529,10 +532,10 @@ document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.rep
 $('#bankSearch').addEventListener('input',renderBank);$('#bankRel').addEventListener('change',renderBank);$('#bankLevel').addEventListener('change',renderBank);
 window.addEventListener('resize',()=>{cancelAnimationFrame(resizeToken);resizeToken=requestAnimationFrame(()=>{if(!menuOpen&&lastDraw&&!$('#main').classList.contains('text-mode'))draw({...lastDraw,animate:false})})});
 $('#bankRel').innerHTML='<option value="all">Все предлоги</option>'+Object.keys(R).map(k=>`<option value="${k}">${R[k].ru}</option>`).join('');
-window.__ZHIMI={version:'10.0',pauseTimer,resumeTimer,syncTimer,tickTimer,recordKey,prefs,ROOMS,R,catBank,makeRound,prepare,questionMode,CATS,currentCat,recordQuestion,weakRelations,setCat,practiceSentence,sceneQuestion,draw,answer,action,render,mode:setMode,setRoom,state,validRound,relevantBank,
- qa:()=>({version:'10.0',timeLimits:TIME_LIMITS,rooms:Object.keys(ROOMS).length,sentences:catBank().length,uniqueSentences:new Set(catBank().map(q=>q.bo)).size,scenes:Object.fromEntries(Object.entries(ROOMS).map(([id,r])=>[id,r.scenes.length])),levelBankCounts:Object.fromEntries(Object.keys(ROOMS).map(id=>[id,relevantBank(id).length]))})};
+window.__ZHIMI={version:'10.1',pauseTimer,resumeTimer,syncTimer,tickTimer,recordKey,prefs,ROOMS,R,catBank,makeRound,prepare,questionMode,CATS,currentCat,recordQuestion,weakRelations,setCat,practiceSentence,sceneQuestion,draw,answer,action,render,mode:setMode,setRoom,state,validRound,relevantBank,
+ qa:()=>({version:'10.1',timeLimits:TIME_LIMITS,rooms:Object.keys(ROOMS).length,sentences:catBank().length,uniqueSentences:new Set(catBank().map(q=>q.bo)).size,scenes:Object.fromEntries(Object.entries(ROOMS).map(([id,r])=>[id,r.scenes.length])),levelBankCounts:Object.fromEntries(Object.keys(ROOMS).map(id=>[id,relevantBank(id).length]))})};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTimer(true);else if(!menuOpen){if(prefs.mode==='learn')window.CAT_STORIES.resume();else{updateTimer();updateTimerOverlay();}syncStoryControls();}});
 window.addEventListener('pagehide',()=>{pauseTimer(false);save();});
 window.addEventListener('pageshow',e=>{if(e.persisted){if(prefs.mode!=='learn')syncTimer();else updateTimerOverlay(null);}});
-openMenu(true);save();
+openMenu(true);showCover(true);save();window.GAME_LOADER?.ready();
 })();
