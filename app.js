@@ -2,6 +2,13 @@
 const D=JSON.parse(document.getElementById('app-data').textContent),ORIGINAL_RELATIONS=Object.keys(D.relations);
 window.LESSON11.install(D);
 const R=D.relations,N=D.nouns,COL=D.colors,ROOMS=D.rooms;
+// This saved-answer ID used to put a cat beyond the tabletop, against the wall.
+// Keep the ID for existing rounds and give the decoy a clear patch of floor.
+Object.assign(ROOMS.tea.poses.left_lamp[0],{x:60,y:677,width:90});
+// Leave a clear strip of floor under the rear cat, below the wall skirting.
+Object.assign(ROOMS.tea.poses.behind_box[0],{y:548});
+// Raise the face above the chair rung without moving the paws off the floor.
+Object.assign(ROOMS.tea.poses.under_chair[0],{width:110});
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const bo=s=>`<span class="bo" lang="bo">${esc(s)}</span>`;
