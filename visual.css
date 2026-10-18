@@ -330,3 +330,12 @@ h1,.mast h1,.start-header h1{color:#744130}
  #playScreen{position:relative}
  .play-options{position:absolute;right:245px;top:2px;margin:0}
 }
+
+.menu-display-settings{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.menu-display-settings .translation-toggle{margin:0}
+.scene-tools .scene-label-toggle{min-height:44px;font-size:12px;padding:6px 9px;flex:none;white-space:nowrap;cursor:pointer}
+#scene .scene-object-label{pointer-events:none}
+#scene .scene-label{fill:#294e3e;stroke:none}
+.scene-label-backdrop{fill:#fffaf0;fill-opacity:.97;stroke:#7d967d;stroke-width:1px}
+.scene-label-leader{fill:none;stroke:#667e62;stroke-width:1.2px;stroke-linecap:round}
+@media(max-width:800px){.scene-tools .scene-label-toggle{font-size:10px;padding:6px 8px;gap:7px}}

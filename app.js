@@ -317,7 +317,7 @@ function uiIcon(id){
 }
 function renderMenuModes(){const d=menuDraft;$('#startScreen').classList.toggle('lesson-topic',ROOMS[d.room].lesson===true);$('#menuModes').innerHTML=MENU_MODES.filter(m=>!ROOMS[d.room].lesson||m.id!=='B').map(base=>{const m=modeInfo(base.id,d.room);return `<button class="setup-choice start-mode mode-${m.id}" data-menu-mode="${m.id}" aria-pressed="${d.mode===m.id}"><span class="mode-icon">${uiIcon(m.id)}</span><span class="mode-copy"><strong>${m.title}</strong><span>${m.description}</span></span><span class="choice-tick">${uiIcon('check')}</span></button>`;}).join('');}
 function renderJourney(){const d=menuDraft,c=CATS.find(c=>c.id===d.cat);$('#setupJourney').innerHTML=['Кошка','Уровень','Тип игры'].map((name,i)=>`<li class="${menuStep===i+1?'current':menuStep>i+1?'done':''}" ${menuStep===i+1?'aria-current="step"':''}><span>${menuStep>i+1?'✓':i+1}</span>${name}</li>`).join('');$('#setupSelection').hidden=menuStep===1;$('#setupSelection').innerHTML=`<img src="${c.src}" alt=""/><span>${esc(c.name)} кошка${menuStep===3?' <i>·</i> '+esc(ROOMS[d.room].title):''}</span>`;}
-function updateSceneTools(){const show=prefs.labels?'Скрыть':'Показать',b=$('#labelsBtn');b.setAttribute('aria-pressed',String(prefs.labels));b.setAttribute('aria-label',show+' подписи к предметам на картинке');b.title=show+' подписи к предметам на картинке';b.innerHTML='<span class="switch" aria-hidden="true"></span><span class="labels-long">'+show+' подписи к предметам</span><span class="labels-short" aria-hidden="true">Подписи к предметам</span>';}
+function updateSceneTools(){const b=$('#labelsBtn');b.checked=prefs.labels;b.setAttribute('aria-label','Тибетские подписи к предметам на картинке');b.title='Показать или скрыть тибетские подписи к предметам';}
 const storyRoundIds=new WeakMap();let storyRoundSerial=0;
 function storyBlocked(){return !menuOpen&&room().lesson&&window.CAT_STORIES.blocked();}
 function syncStoryControls(){
@@ -346,10 +346,10 @@ function drawLesson(o){
 function applyTranslationVisibility(){document.body.classList.toggle('hide-russian',prefs.hideRussian);$('#playHideRussian').checked=prefs.hideRussian;}
 function renderCompanion(){applyTranslationVisibility();const c=currentCat();$('#gameCompanion').innerHTML='<img src="'+c.src+'" alt="'+esc(c.name)+' кошка"/><span>'+esc(c.name)+'</span>';$('#sessionSummary').hidden=!!room().lesson;$('#sessionSummary').textContent=room().lesson?'':room().title+' · '+modeInfo(prefs.mode).title;}
 function menuSettings(rid,mode){const s=state(rid),r=mode==='learn'?null:s.rounds[mode];return r&&r.i<r.qs.length?{filter:r.filter,length:r.retry?s.length:r.length,optionCount:r.optionCount||4,timeLimit:r.timeLimit||0}:{filter:s.filter,length:s.length,optionCount:s.optionCount,timeLimit:s.timeLimit};}
-function menuSelection(){return {cat:prefs.cat,room:prefs.room,mode:prefs.mode,hideRussian:prefs.hideRussian,...menuSettings(prefs.room,prefs.mode)};}
+function menuSelection(){return {cat:prefs.cat,room:prefs.room,mode:prefs.mode,labels:prefs.labels,hideRussian:prefs.hideRussian,...menuSettings(prefs.room,prefs.mode)};}
 function matchingMenuRound(){if(!menuDraft||menuDraft.mode==='learn')return null;const d=menuDraft,s=state(d.room),r=s.rounds[d.mode];return r&&r.i<r.qs.length&&r.filter===d.filter&&(r.retry?d.length===s.length:r.length===d.length)&&(r.optionCount||4)===d.optionCount&&(r.timeLimit||0)===d.timeLimit?r:null;}
 function updateStartAction(){$('#startButton').textContent='Начать играть';$('#startButton').hidden=menuStep!==3;$('#menuNextButton').hidden=menuStep===3;$('#menuNextButton').textContent=menuStep===2?'Далее: тип игры':'Далее';$('#menuBackButton').hidden=menuStep===1;}
-function renderMenuStep(){const titles=['Выберите кошку','Выберите уровень','Выберите тип игры'];$('#startTitle').textContent=titles[menuStep-1];$('#menuStepCount').textContent='Шаг '+menuStep+' из 3';$('#menuCatStep').hidden=menuStep!==1;$('#menuRoomStep').hidden=menuStep!==2;$('#menuModeStep').hidden=menuStep!==3;$('#menuTranslationSetting').hidden=menuStep!==3;renderControls();updateStartAction();renderJourney();}
+function renderMenuStep(){const titles=['Выберите кошку','Выберите уровень','Выберите тип игры'];$('#startTitle').textContent=titles[menuStep-1];$('#menuStepCount').textContent='Шаг '+menuStep+' из 3';$('#menuCatStep').hidden=menuStep!==1;$('#menuRoomStep').hidden=menuStep!==2;$('#menuModeStep').hidden=menuStep!==3;$('#menuTranslationSetting').hidden=menuStep!==3;$('#menuLabelSetting').hidden=menuStep!==3;renderControls();updateStartAction();renderJourney();}
 function setMenuStep(step){if(!menuOpen)return;menuStep=Math.min(3,Math.max(1,step));renderMenuStep();$('#startScreen').scrollIntoView({behavior:'instant',block:'start'});$('#startTitle').focus({preventScroll:true});}
 
 function renderMenu(){
@@ -365,7 +365,7 @@ function showPlayScreen(){$('#coverScreen').hidden=true;menuOpen=false;$('#start
 function startGame(forceNew=false){
  if(!menuDraft)return;
  const d=menuDraft,previous=matchingMenuRound();stopClock();
- const catChanged=prefs.cat!==d.cat;prefs.cat=d.cat;prefs.room=d.room;prefs.mode=d.mode;prefs.hideRussian=d.hideRussian;
+ const catChanged=prefs.cat!==d.cat;prefs.cat=d.cat;prefs.room=d.room;prefs.mode=d.mode;prefs.hideRussian=d.hideRussian;prefs.labels=d.labels;
  const s=state();for(const k of ['filter','length','optionCount','timeLimit'])s[k]=d[k];
  if(catChanged)refreshAllQuestions();
  if(d.mode!=='learn'){
@@ -423,11 +423,38 @@ function markerLayout(o,vb){const rm=room(),screen=$('#scene').clientWidth||800;
 function markerSVG(o,vb){const {r,points}=markerLayout(o,vb),answered=Number.isInteger(o.chosen);
  return o.cands.map((cd,k)=>{if(answered&&(k!==o.chosen||cd.correct))return'';const pts=points.filter(p=>p.k===k);const links=pts.length>1?`<path d="M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}" stroke="#f1cb83" stroke-width="3" opacity=".85"/>`:'';
  return `<g class="spot ${answered?'wrong':''}" ${answered?'aria-hidden="true"':`tabindex="0" role="button" aria-label="Место ${k+1}"`} data-spot="${k}">${links}${pts.map(p=>`${Math.hypot(p.x-p.ax,p.y-p.ay)>r*.5?`<path d="M${p.ax},${p.ay}L${p.x},${p.y}" stroke="#ffe2a2" stroke-width="2"/><circle cx="${p.ax}" cy="${p.ay}" r="4" fill="#ffe2a2"/>`:''}<circle cx="${p.x}" cy="${p.y}" r="${r}"/><text x="${p.x}" y="${p.y}" style="font-size:${r*.96}px">${answered?'×':k+1}</text>`).join('')}</g>`}).join('')}
-function labelsSVG(vb){const rm=room(),[left,top,w,h]=vb,mx=Math.min(90,w*.18),my=48;return Object.entries(rm.refs).filter(([id,v])=>{if(id==='room'||id==='rug')return false;const [x1,y1,x2,y2]=v.bounds,area=(x2-x1)*(y2-y1),visible=Math.max(0,Math.min(x2,left+w)-Math.max(x1,left))*Math.max(0,Math.min(y2,top+h)-Math.max(y1,top));return visible>=area*.3}).map(([id,v])=>{const x=Math.max(left+mx,Math.min(left+w-mx,v.tag[0])),y=Math.max(top+my,Math.min(top+h-my,v.tag[1]));return `<text class="scene-label" x="${x}" y="${y}" text-anchor="middle" lang="bo">${N[v.noun].bo}</text>`}).join('')}
+let labelMeasureContext;
+function labelMetrics(text,size){
+ if(!labelMeasureContext&&document.createElement)labelMeasureContext=document.createElement('canvas').getContext('2d');
+ if(labelMeasureContext){labelMeasureContext.font=`${size}px "Noto Serif Tibetan", "Kailasa", serif`;const m=labelMeasureContext.measureText(text);return {width:m.width,ascent:m.actualBoundingBoxAscent||size*1.2,descent:m.actualBoundingBoxDescent||size*.6};}
+ return {width:[...text].filter(c=>!/[\u0f71-\u0f84]/.test(c)).length*size*.7,ascent:size*1.2,descent:size*.6};
+}
+function labelsSVG(o,vb){
+ const rm=room(),[left,top,w,h]=vb,scale=w/Math.max(240,$('#scene').clientWidth||560),size=(matchMedia('(max-width:800px)').matches?18:22)*scale,pad=6*scale,gap=6*scale;
+ const overlap=(a,b)=>Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));
+ const poses=o.cands?o.cands.flatMap(c=>rm.poses[c.id]):o.show===false?[]:rm.poses[o.id]||[];
+ const avoid=poses.map(p=>{const b=poseBounds(p);return {x:b[0]-gap,y:b[1]-gap,w:b[2]-b[0]+gap*2,h:b[3]-b[1]+gap*2}});
+ if(o.cands&&o.chosen===null){const m=markerLayout(o,vb);for(const p of m.points)avoid.push({x:p.x-m.r-gap,y:p.y-m.r-gap,w:2*(m.r+gap),h:2*(m.r+gap)});}
+ const placed=[];
+ return Object.entries(rm.refs).filter(([id,v])=>{if(id==='room'||id==='rug')return false;const [x1,y1,x2,y2]=v.bounds,visible=overlap({x:left,y:top,w,h},{x:x1,y:y1,w:x2-x1,h:y2-y1});return visible>=(x2-x1)*(y2-y1)*.3}).map(([id,v])=>{
+  const text=N[v.noun].bo,m=labelMetrics(text,size),bw=Math.min(w-2*gap,m.width+2*pad),bh=m.ascent+m.descent+2*pad;
+  const ax=Math.max(left+gap,Math.min(left+w-gap,v.tag[0])),ay=Math.max(top+gap,Math.min(top+h-gap,v.tag[1]));
+  const candidates=[[ax,ay],[ax,ay-bh-gap],[ax,ay+bh+gap],[ax-bw-gap,ay],[ax+bw+gap,ay]];
+  for(const p of placed)candidates.push([ax,p.y-bh/2-gap],[ax,p.y+p.h+bh/2+gap],[p.x-bw/2-gap,ay],[p.x+p.w+bw/2+gap,ay]);
+  for(let y=top+gap+bh/2;y<=top+h-gap-bh/2;y+=(bh+gap)/2)for(let x=left+gap+bw/2;x<=left+w-gap-bw/2;x+=(bw+gap)/2)candidates.push([x,y]);
+  let best=null,score=Infinity;
+  for(const [cx,cy]of candidates){const b={x:Math.max(left+gap,Math.min(left+w-gap-bw,cx-bw/2)),y:Math.max(top+gap,Math.min(top+h-gap-bh,cy-bh/2)),w:bw,h:bh};
+   const cost=avoid.reduce((s,a)=>s+overlap(b,a),0)*200+placed.reduce((s,a)=>s+overlap(b,a),0)*100000+Math.hypot(b.x+bw/2-ax,b.y+bh/2-ay)*scale;
+   if(cost<score){score=cost;best=b;}
+  }
+  placed.push(best);const x=best.x+bw/2,y=best.y+pad+m.ascent,dist=Math.hypot(x-ax,best.y+bh/2-ay);
+  return `<g class="scene-object-label" data-object-label="${id}" pointer-events="none">${dist>24*scale?`<path class="scene-label-leader" d="M${ax} ${ay}L${x} ${best.y+bh/2}" vector-effect="non-scaling-stroke"/>`:''}<rect class="scene-label-backdrop" x="${best.x}" y="${best.y}" width="${bw}" height="${bh}" rx="${6*scale}" vector-effect="non-scaling-stroke"/><text class="scene-label" x="${x}" y="${y}" text-anchor="middle" lang="bo" style="font-size:${size}px">${text}</text></g>`;
+ }).join('');
+}
 function draw(o){lastDraw={...o};if(room().lesson)return drawLesson(o);$('#sceneHeading').hidden=false;$('.scene-top').classList.remove('story-scene-top');window.CAT_STORIES.clear();$('#storyControls').hidden=true;$('#zoomBtn').hidden=false;updateSceneTools();const rm=room(),vb=viewBox(o),cs=o.show===false?[]:rm.poses[o.id]||[];
  const svg=$('#scene');svg.setAttribute('viewBox',vb.join(' '));svg.setAttribute('role',o.cands&&o.chosen===null?'group':'img');svg.setAttribute('aria-label',o.cands&&o.chosen===null?'Комната. Выберите одно из '+o.cands.length+' пронумерованных мест.':o.alt||'Комната с кошкой.');
- svg.innerHTML=`<image href="${rm.image}" x="0" y="0" width="${rm.width}" height="${rm.height}"/>`+cs.map(p=>catSVG(p,o.animate)).join('')+(o.cands&&o.chosen===null?`<g class="cat-previews">${o.cands.flatMap(cd=>rm.poses[cd.id]).sort((a,b)=>a.y-b.y).map(p=>catSVG(p,false,prefs.room,true)).join('')}</g>`:'')+(prefs.labels?labelsSVG(vb):'')+(o.cands?markerSVG(o,vb):'');
- $('.scene-wrap').style.aspectRatio=String(vb[2]/vb[3]);$('#labelsBtn').setAttribute('aria-pressed',String(prefs.labels));$('#zoomBtn').setAttribute('aria-pressed',String(prefs.zoom));$('#zoomBtn').setAttribute('aria-label',prefs.zoom?'Показать всю комнату':'Приблизить место задания');
+ svg.innerHTML=`<image href="${rm.image}" x="0" y="0" width="${rm.width}" height="${rm.height}"/>`+cs.map(p=>catSVG(p,o.animate)).join('')+(o.cands&&o.chosen===null?`<g class="cat-previews">${o.cands.flatMap(cd=>rm.poses[cd.id]).sort((a,b)=>a.y-b.y).map(p=>catSVG(p,false,prefs.room,true)).join('')}</g>`:'')+(prefs.labels?labelsSVG(o,vb):'')+(o.cands?markerSVG(o,vb):'');
+ $('.scene-wrap').style.aspectRatio=String(vb[2]/vb[3]);$('#zoomBtn').setAttribute('aria-pressed',String(prefs.zoom));$('#zoomBtn').setAttribute('aria-label',prefs.zoom?'Показать всю комнату':'Приблизить место задания');
 }
 
 // -------- Interface and existing exercise mechanics --------
@@ -449,7 +476,7 @@ function renderMenuRelationHelp(){const d=menuDraft;if(!d)return;const rm=ROOMS[
 
 function renderControls(){
  const d=menuOpen&&menuDraft?menuDraft:menuSelection();
- $('#menuModeHelp').textContent=modeInfo(d.mode,d.room).description;$('#menuPracticeSettings').hidden=menuStep!==3||d.mode==='learn';renderMenuRelationHelp();$('#menuHideRussian').checked=d.hideRussian??prefs.hideRussian;
+ $('#menuModeHelp').textContent=modeInfo(d.mode,d.room).description;$('#menuPracticeSettings').hidden=menuStep!==3||d.mode==='learn';renderMenuRelationHelp();$('#menuHideRussian').checked=d.hideRussian??prefs.hideRussian;$('#menuShowLabels').checked=d.labels??prefs.labels;
  $('#relationFilter').innerHTML=filterHTML(d.room);$('#relationFilter').value=d.filter;$('#roundLength').value=String(d.length);$('#timerSelect').value=String(d.timeLimit);$('#optionCount').value=String(d.optionCount);
 }
 
@@ -525,8 +552,9 @@ function action(act){const s=state(),r=s.rounds[prefs.mode];
  else if(act==='open-progress'){pauseTimer(true);renderProgress();$('#progressDialog').showModal()}else if(act==='close-progress')$('#progressDialog').close();else if(act==='practice-weak')practiceWeak();else if(act==='learn')setMode('learn');else if(act==='open-bank')openBank();else if(act==='close-bank')$('#bankDialog').close();}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.menuCat)return chooseMenuCat(b.dataset.menuCat);if(b.dataset.menuRoom)return chooseMenuRoom(b.dataset.menuRoom);if(b.dataset.menuMode)return chooseMenuMode(b.dataset.menuMode);if(b.dataset.cat)return setCat(b.dataset.cat);if(b.dataset.room)return setRoom(b.dataset.room);if(b.dataset.mode)return setMode(b.dataset.mode);if(b.dataset.rel){state().learnC=b.dataset.rel;state().learnIndex=0;save();renderLearn(true);return}if(b.dataset.answer!==undefined)return answer(+b.dataset.answer);if(b.dataset.practiceId){practiceSentence(b.dataset.practiceId);return}if(b.dataset.exampleId){showExample(b.dataset.exampleId);return}if(b.dataset.action)action(b.dataset.action)});
 $('#menuHideRussian').addEventListener('change',e=>{if(menuOpen&&menuDraft)menuDraft.hideRussian=e.target.checked;});
+$('#menuShowLabels').addEventListener('change',e=>{if(menuOpen&&menuDraft)menuDraft.labels=e.target.checked;});
 $('#playHideRussian').addEventListener('change',e=>{prefs.hideRussian=e.target.checked;save();render(false);});
-$('#labelsBtn').addEventListener('click',()=>{prefs.labels=!prefs.labels;save();if(lastDraw)draw({...lastDraw,animate:false})});$('#zoomBtn').addEventListener('click',()=>{prefs.zoom=!prefs.zoom;save();if(lastDraw)draw({...lastDraw,animate:false})});
+$('#labelsBtn').addEventListener('change',e=>{prefs.labels=e.target.checked;save();if(lastDraw)draw({...lastDraw,animate:false})});$('#zoomBtn').addEventListener('click',()=>{prefs.zoom=!prefs.zoom;save();if(lastDraw)draw({...lastDraw,animate:false})});
 for(const [id,key,allowed] of [['relationFilter','filter',null],['roundLength','length',[6,12,24]],['optionCount','optionCount',[2,4]],['timerSelect','timeLimit',TIME_LIMITS]])$('#'+id).addEventListener('change',e=>{if(!menuOpen||!menuDraft)return;const value=allowed?Number(e.target.value):e.target.value;if(allowed?!allowed.includes(value):!allowedFilter(value,menuDraft.room))return;menuDraft[key]=value;renderMenuRelationHelp();updateStartAction();});
 $('#scene').addEventListener('click',e=>{const el=e.target.closest('[data-spot]');if(el&&!el.classList.contains('wrong'))answer(+el.dataset.spot)});
 $('#scene').addEventListener('keydown',e=>{const el=e.target.closest('[data-spot]');if(el&&['Enter',' '].includes(e.key)){e.preventDefault();answer(+el.dataset.spot)}});
