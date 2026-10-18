@@ -241,3 +241,74 @@ h1,.mast h1,.start-header h1{color:#744130}
 .start-header .start-game-name{background:none;border:0;padding:0;text-align:left}.start-header button.start-game-name:hover{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:800px){.cover-screen{display:flex;flex-direction:column;min-height:calc(100vh - 24px);min-height:calc(100svh - 24px);border-radius:23px;max-width:490px}.cover-art{width:100%;aspect-ratio:1.13;flex:1 0 auto}.cover-art img{object-position:50% 34%}.cover-copy{flex:none;align-items:center;text-align:center;padding:24px 24px 26px}.cover-kicker{font-size:10px;margin-bottom:9px}.cover-title{font-size:43px;letter-spacing:-1px;max-width:none}.cover-intro{font-size:12px;line-height:1.7;margin:12px 0 18px;max-width:26ch}.cover-play{width:100%;max-width:285px;min-height:50px;font-size:14px}.cover-results{font-size:10px;margin-top:16px}}
 @media(max-width:350px){.cover-copy{padding:21px 20px 23px}.cover-title{font-size:38px}.cover-kicker{font-size:9px}.cover-intro{font-size:11px}.cover-play{min-height:48px}}
+
+/* Use the available desktop space without enlarging the phone layout. */
+@media(min-width:1100px){
+ .app{--desktop-inset:clamp(16px,1.5vw,28px);max-width:1800px;padding:var(--desktop-inset)}
+ .start-screen{width:100%;max-width:none;min-height:calc(100vh - 2 * var(--desktop-inset));min-height:calc(100svh - 2 * var(--desktop-inset));padding:28px 30px 22px}
+ .start-screen:not([hidden]){display:flex;flex-direction:column}
+ .start-header h1{font-size:clamp(40px,3.2vw,52px)}
+ .start-header .start-game-name{font-size:15px}
+ .start-header>.text-link{font-size:14px;min-height:44px;padding:10px 17px}
+ .setup-journey{gap:10px;margin-bottom:20px}
+ .setup-journey li{font-size:14px;padding:7px 14px 7px 8px;gap:8px}
+ .setup-journey li>span{width:26px;height:26px;font-size:12px}
+ .setup-selection{font-size:14px;min-height:40px}
+ .setup-selection img{width:34px;height:34px}
+ #menuCatStep:not([hidden]){display:flex;flex:1;flex-direction:column}
+ .start-cats{flex:1;gap:14px}
+ .start-cat{min-height:190px;padding:14px 10px;gap:10px}
+ .start-cat img{height:clamp(130px,19vh,200px);height:clamp(130px,19svh,200px)}
+ .start-cat::before{width:116px;height:116px;top:24px}
+ .start-cat span{font-size:16px}
+ .start-room{min-height:190px;padding:15px;gap:18px}
+ .start-room img{width:clamp(155px,14vw,230px);height:150px}
+ .start-room strong{font-size:20px}
+ .start-room .room-level,.start-room .room-description{font-size:13px}
+ .start-room .room-topics{font-size:15px}
+ .start-mode,.start-mode:last-child{min-height:110px;padding:18px 30px 18px 16px;gap:16px}
+ .start-mode .mode-icon{width:54px;height:54px}
+ .start-mode .mode-copy strong{font-size:17px}
+ .start-mode .mode-copy>span{font-size:13px}
+ .menu-mode-help{font-size:14px}
+ .start-screen #menuPracticeSettings legend{font-size:15px}
+ .start-screen #practiceControls .select-label{font-size:13px}
+ .start-screen #practiceControls select{font-size:15px;min-height:50px}
+ .menu-relation-help{font-size:14px;padding:13px 15px}
+ .menu-relation-help summary,.scope-chips>span{font-size:13px}
+ .translation-toggle{font-size:15px;min-height:50px}
+ .start-screen .start-actions{margin-top:auto;padding-top:18px;gap:12px}
+ .start-actions .btn{font-size:16px;min-height:52px;padding:12px 24px}
+ #menuNextButton{min-width:190px}
+ .cover-screen{max-width:1360px;min-height:clamp(600px,calc(100svh - 2 * var(--desktop-inset)),880px)}
+ .cover-title{font-size:clamp(68px,5.5vw,90px)}
+ .cover-play{font-size:19px;min-height:62px;min-width:250px}
+ .cover-results{font-size:14px}
+ .play-header h1{font-size:40px}
+ .session-summary,.game-companion{font-size:14px}
+ .game-companion img{width:48px;height:54px}
+ .menu-button{font-size:16px;min-height:50px;min-width:100px}
+ .play-options .translation-toggle{font-size:14px}
+ .scene-heading{font-size:16px}
+ .scene-tools .toggle{font-size:13px;min-height:44px}
+ .task-card,.main.is-practice .task-card{padding:22px 24px}
+ .mode-instruction{font-size:16px}
+ .entry-heading .bo{font-size:36px}
+ .entry-heading .entry-ru,.ru{font-size:18px}
+ .sentence{font-size:32px}
+ .translation-prompt{font-size:28px}
+ .option{min-height:82px;padding:12px}
+ .option .bo,.translation-options .option .bo{font-size:28px}
+ .actions .btn{font-size:15px;min-height:50px}
+ .progress-meta{font-size:14px}
+ .story-caption{font-size:15px}
+ .story-button{font-size:14px;min-height:44px}
+ .tile .bo{font-size:28px}
+ .tile .t-ru{font-size:14px}
+}
+@media(min-width:1100px) and (max-height:760px){
+ .start-screen{padding:22px 24px 18px}
+ .start-cat{min-height:170px;padding:12px 10px;gap:8px}
+ .start-cat img{height:clamp(112px,18vh,135px);height:clamp(112px,18svh,135px)}
+ .start-mode,.start-mode:last-child{min-height:94px;padding-top:13px;padding-bottom:13px}
+}
