@@ -429,26 +429,92 @@ function labelMetrics(text,size){
  if(labelMeasureContext){labelMeasureContext.font=`${size}px "Noto Serif Tibetan", "Kailasa", serif`;const m=labelMeasureContext.measureText(text);return {width:m.width,ascent:m.actualBoundingBoxAscent||size*1.2,descent:m.actualBoundingBoxDescent||size*.6};}
  return {width:[...text].filter(c=>!/[\u0f71-\u0f84]/.test(c)).length*size*.7,ascent:size*1.2,descent:size*.6};
 }
-function labelsSVG(o,vb){
- const rm=room(),[left,top,w,h]=vb,scale=w/Math.max(240,$('#scene').clientWidth||560),size=(matchMedia('(max-width:800px)').matches?18:22)*scale,pad=6*scale,gap=6*scale;
+// Visible furniture edges: [start x, start y, end x, end y, outward x, outward y].
+// Leaders end on these edges, never on an arbitrary point on the wall.
+const SCENE_OBJECT_LABELS={
+ bedroom:{
+  bed:[[60,705,160,677,0,1],[160,650,395,567,0,1],[180,331,401,331,0,-1],[408,333,408,561,1,0]],
+  box:[[430,640,712,649,0,1],[734,496,734,635,1,0],[429,515,429,630,-1,0],[464,397,720,397,0,-1],[720,404,738,497,1,0]],
+  table:[[1035,615,1055,615,0,1],[1049,451,1275,451,0,1],[995,452,995,580,-1,0],[982,390,1365,390,0,-1]],
+  chair:[[1460,690,1490,690,0,1],[1295,648,1325,648,0,1],[1291,505,1447,526,0,1],[1507,350,1495,640,1,0],[1408,333,1506,333,0,-1],[1397,333,1380,480,-1,0]],
+  lamp:[[1260,235,1310,235,0,-1],[1260,237,1238,305,-1,0],[1310,237,1335,305,1,0],[1265,331,1265,373,-1,0],[1310,331,1310,373,1,0],[1280,382,1295,382,0,1]]
+ },
+ tea:{
+  table:[[153,635,173,635,0,1],[145,454,490,454,0,1],[110,460,110,590,-1,0],[93,380,518,380,0,-1]],
+  chair:[[557,690,578,690,0,1],[417,689,440,689,0,1],[414,525,414,690,-1,0],[619,399,613,670,1,0],[534,370,621,369,0,-1],[529,373,522,508,-1,0]],
+  box:[[762,547,990,559,0,1],[999,430,1005,547,1,0],[759,450,759,544,-1,0],[789,357,985,357,0,-1],[985,357,1001,436,1,0]],
+  lamp:[[135,216,184,216,0,-1],[135,218,108,292,-1,0],[184,218,212,292,1,0],[137,330,137,369,-1,0],[184,333,184,369,1,0],[147,378,176,378,0,1]]
+ },
+ library:{
+  chair:[[260,631,277,631,0,1],[160,476,160,594,-1,0],[348,366,346,580,1,0],[175,475,330,493,0,1],[272,329,351,331,0,-1],[263,332,251,460,-1,0]],
+  box:[[451,565,678,572,0,1],[690,454,690,562,1,0],[448,462,448,555,-1,0],[476,373,673,373,0,-1]],
+  door:[[942,64,942,534,-1,0],[943,549,1125,600,0,1],[1143,70,1143,600,1,0],[952,65,1138,65,0,-1]]
+ }
+};
+function objectLabelLayout(o,vb,compactLabels=false){
+ const rm=room(),[left,top,w,h]=vb,scale=w/Math.max(240,$('#scene').clientWidth||560),size=(matchMedia('(max-width:800px)').matches?18:22)*scale,pad=(($('#scene').clientWidth||560)<320?4:6)*scale,gap=3*scale;
  const overlap=(a,b)=>Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y));
- const poses=o.cands?o.cands.flatMap(c=>rm.poses[c.id]):o.show===false?[]:rm.poses[o.id]||[];
- const avoid=poses.map(p=>{const b=poseBounds(p);return {x:b[0]-gap,y:b[1]-gap,w:b[2]-b[0]+gap*2,h:b[3]-b[1]+gap*2}});
- if(o.cands&&o.chosen===null){const m=markerLayout(o,vb);for(const p of m.points)avoid.push({x:p.x-m.r-gap,y:p.y-m.r-gap,w:2*(m.r+gap),h:2*(m.r+gap)});}
- const placed=[];
- return Object.entries(rm.refs).filter(([id,v])=>{if(id==='room'||id==='rug')return false;const [x1,y1,x2,y2]=v.bounds,visible=overlap({x:left,y:top,w,h},{x:x1,y:y1,w:x2-x1,h:y2-y1});return visible>=(x2-x1)*(y2-y1)*.3}).map(([id,v])=>{
-  const text=N[v.noun].bo,m=labelMetrics(text,size),bw=Math.min(w-2*gap,m.width+2*pad),bh=m.ascent+m.descent+2*pad;
-  const ax=Math.max(left+gap,Math.min(left+w-gap,v.tag[0])),ay=Math.max(top+gap,Math.min(top+h-gap,v.tag[1]));
-  const candidates=[[ax,ay],[ax,ay-bh-gap],[ax,ay+bh+gap],[ax-bw-gap,ay],[ax+bw+gap,ay]];
-  for(const p of placed)candidates.push([ax,p.y-bh/2-gap],[ax,p.y+p.h+bh/2+gap],[p.x-bw/2-gap,ay],[p.x+p.w+bw/2+gap,ay]);
-  for(let y=top+gap+bh/2;y<=top+h-gap-bh/2;y+=(bh+gap)/2)for(let x=left+gap+bw/2;x<=left+w-gap-bw/2;x+=(bw+gap)/2)candidates.push([x,y]);
-  let best=null,score=Infinity;
-  for(const [cx,cy]of candidates){const b={x:Math.max(left+gap,Math.min(left+w-gap-bw,cx-bw/2)),y:Math.max(top+gap,Math.min(top+h-gap-bh,cy-bh/2)),w:bw,h:bh};
-   const cost=avoid.reduce((s,a)=>s+overlap(b,a),0)*200+placed.reduce((s,a)=>s+overlap(b,a),0)*100000+Math.hypot(b.x+bw/2-ax,b.y+bh/2-ay)*scale;
-   if(cost<score){score=cost;best=b;}
+ const inflate=(b,n)=>({x:b.x-n,y:b.y-n,w:b.w+2*n,h:b.h+2*n});
+ // Test the entire leader as well as the caption, so a line cannot cross a cat or a number.
+ const lineHits=(line,b)=>{
+  const [a,z]=line,dx=z[0]-a[0],dy=z[1]-a[1];
+  if(b.r){const t=Math.max(0,Math.min(1,((b.x-a[0])*dx+(b.y-a[1])*dy)/(dx*dx+dy*dy||1)));return Math.hypot(a[0]+dx*t-b.x,a[1]+dy*t-b.y)<b.r;}
+  let lo=0,hi=1;
+  for(const [p,q]of [[-dx,a[0]-b.x],[dx,b.x+b.w-a[0]],[-dy,a[1]-b.y],[dy,b.y+b.h-a[1]]]){
+   if(Math.abs(p)<.00001){if(q<0)return false;}else{const t=q/p;if(p<0)lo=Math.max(lo,t);else hi=Math.min(hi,t);if(lo>hi)return false;}
+  }return true;
+ };
+ const hits=(b,a)=>a.r?Math.hypot(Math.max(b.x,Math.min(b.x+b.w,a.x))-a.x,Math.max(b.y,Math.min(b.y+b.h,a.y))-a.y)<a.r:overlap(b,a)>.01;
+ const linesCross=(a,b)=>{const cross=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);return cross(...a,b[0])*cross(...a,b[1])<0&&cross(...b,a[0])*cross(...b,a[1])<0;};
+ const poses=o.cands&&o.chosen===null?o.cands.flatMap(c=>rm.poses[c.id]):o.show===false?[]:rm.poses[o.id]||[];
+ const avoid=poses.map(p=>{const b=poseBounds(p);return inflate({x:b[0],y:b[1],w:b[2]-b[0],h:b[3]-b[1]},gap)});
+ if(o.cands){const m=markerLayout(o,vb);for(const p of m.points){if(Number.isInteger(o.chosen)&&(p.k!==o.chosen||o.cands[p.k].correct))continue;avoid.push({x:p.x,y:p.y,r:m.r+gap});}}
+ const refs=Object.entries(rm.refs).filter(([id,v])=>{if(!SCENE_OBJECT_LABELS[prefs.room]?.[id])return false;const [x1,y1,x2,y2]=v.bounds;return overlap({x:left,y:top,w,h},{x:x1,y:y1,w:x2-x1,h:y2-y1})>=(x2-x1)*(y2-y1)*.3;});
+ const items=refs.map(([id,v])=>{
+  const text=N[v.noun].bo,chunks=text.match(/[^་]+་?/g)||[text],variants=[[text]];
+  // On very crowded phone scenes, a two-line label keeps the same readable font.
+  if(compactLabels&&matchMedia('(max-width:800px)').matches&&chunks.length>1)variants.push(chunks);
+  const anchors=SCENE_OBJECT_LABELS[prefs.room][id].flatMap(([x1,y1,x2,y2,nx,ny],edge)=>{const steps=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)/45));return Array.from({length:steps+1},(_,i)=>[x1+(x2-x1)*i/steps,y1+(y2-y1)*i/steps,nx,ny,edge]);}).filter(([x,y])=>x>=left&&x<=left+w&&y>=top&&y<=top+h);
+  const candidates=[],keys=new Set();
+  for(const lines of variants){
+   let height=pad;const rows=lines.map(text=>{const m=labelMetrics(text,size),y=height+m.ascent;height+=m.ascent+m.descent+2*scale;return {text,m,y};});
+   const bw=Math.min(w-2*gap,Math.max(...rows.map(r=>r.m.width))+2*pad),bh=height-2*scale+pad;
+   for(const [ax,ay,nx,ny,edge]of anchors){
+    for(const distance of [8,18,32,52,76])for(const shift of [0,-.5,.5,-1,1,-1.5,1.5]){
+     const tangent=shift*(nx?bh:bw),cx=ax+nx*((nx?bw:bh)/2+distance*scale)-ny*tangent,cy=ay+ny*((nx?bw:bh)/2+distance*scale)+nx*tangent;
+     const b={x:Math.max(left+gap,Math.min(left+w-gap-bw,cx-bw/2)),y:Math.max(top+gap,Math.min(top+h-gap-bh,cy-bh/2)),w:bw,h:bh};
+     const end=[Math.max(b.x,Math.min(b.x+bw,ax)),Math.max(b.y,Math.min(b.y+bh,ay))],line=[[ax,ay],end],length=Math.hypot(end[0]-ax,end[1]-ay)/scale;
+     const key=[b.x,b.y,bw,bh,ax,ay].map(n=>Math.round(n)).join(',');
+     if(keys.has(key)||length<4||length>90||avoid.some(a=>hits(b,a)||lineHits(line,a)))continue;
+     keys.add(key);
+     const furniture=refs.reduce((s,[other,r])=>{const [x1,y1,x2,y2]=r.bounds;return s+overlap(b,{x:x1,y:y1,w:x2-x1,h:y2-y1})/(bw*bh)*(id===other?12:24);},0);
+     candidates.push({b,line,rows,cost:length+edge*3+Math.abs(tangent)/scale*.12+furniture+(lines.length-1)*18});
+    }
+   }
   }
-  placed.push(best);const x=best.x+bw/2,y=best.y+pad+m.ascent,dist=Math.hypot(x-ax,best.y+bh/2-ay);
-  return `<g class="scene-object-label" data-object-label="${id}" pointer-events="none">${dist>24*scale?`<path class="scene-label-leader" d="M${ax} ${ay}L${x} ${best.y+bh/2}" vector-effect="non-scaling-stroke"/>`:''}<rect class="scene-label-backdrop" x="${best.x}" y="${best.y}" width="${bw}" height="${bh}" rx="${6*scale}" vector-effect="non-scaling-stroke"/><text class="scene-label" x="${x}" y="${y}" text-anchor="middle" lang="bo" style="font-size:${size}px">${text}</text></g>`;
+  candidates.sort((a,b)=>a.cost-b.cost);
+  const diverse=[];for(const c of candidates)if(!diverse.some(p=>p.rows.length===c.rows.length&&Math.hypot(p.b.x-c.b.x,p.b.y-c.b.y)<10*scale)){diverse.push(c);if(diverse.length===120)break;}
+  return {id,text,candidates:diverse};
+ });
+ // Place constrained objects first and consider captions together. A nearby empty spot for
+ // one label must not force the next label across the room or over a numbered answer.
+ const order=items.map((item,i)=>({item,i})).sort((a,b)=>a.item.candidates.length-b.item.candidates.length);
+ let beam=[{cost:0,placed:[]}];
+ for(const {item,i}of order){const next=[];
+  for(const state of beam)for(const c of item.candidates){
+   if(state.placed.some(p=>overlap(inflate(c.b,gap),p.b)>.01||lineHits(c.line,inflate(p.b,gap/2))||lineHits(p.line,inflate(c.b,gap/2))||linesCross(c.line,p.line)))continue;
+   next.push({cost:state.cost+c.cost,placed:[...state.placed,{...c,i}]});
+  }
+  next.sort((a,b)=>a.cost-b.cost);beam=next.slice(0,64);if(!beam.length)break;
+ }
+ if(!beam.length&&!compactLabels&&matchMedia('(max-width:800px)').matches)return objectLabelLayout(o,vb,true);
+ const placed=beam[0]?.placed||[];
+ return {size,pad,scale,labels:placed.sort((a,b)=>a.i-b.i).map(c=>({...items[c.i],...c}))};
+}
+function labelsSVG(o,vb){
+ const {size,pad,scale,labels}=objectLabelLayout(o,vb);
+ return labels.map(({id,text,rows,b,line})=>{const [a,z]=line,path=`M${a[0]} ${a[1]}L${z[0]} ${z[1]}`;
+  return `<g class="scene-object-label" data-object-label="${id}" pointer-events="none"><path class="scene-label-leader-halo" d="${path}" vector-effect="non-scaling-stroke"/><path class="scene-label-leader" d="${path}" vector-effect="non-scaling-stroke"/><circle class="scene-label-anchor" cx="${a[0]}" cy="${a[1]}" r="${2.5*scale}" vector-effect="non-scaling-stroke"/><rect class="scene-label-backdrop" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${6*scale}" vector-effect="non-scaling-stroke"/><text class="scene-label" x="${b.x+b.w/2}" y="${b.y+rows[0].y}" text-anchor="middle" lang="bo" style="font-size:${size}px">${rows.map(r=>`<tspan x="${b.x+b.w/2}" y="${b.y+r.y}">${r.text}</tspan>`).join('')}</text></g>`;
  }).join('');
 }
 function draw(o){lastDraw={...o};if(room().lesson)return drawLesson(o);$('#sceneHeading').hidden=false;$('.scene-top').classList.remove('story-scene-top');window.CAT_STORIES.clear();$('#storyControls').hidden=true;$('#zoomBtn').hidden=false;updateSceneTools();const rm=room(),vb=viewBox(o),cs=o.show===false?[]:rm.poses[o.id]||[];
@@ -560,7 +626,9 @@ $('#scene').addEventListener('click',e=>{const el=e.target.closest('[data-spot]'
 $('#scene').addEventListener('keydown',e=>{const el=e.target.closest('[data-spot]');if(el&&['Enter',' '].includes(e.key)){e.preventDefault();answer(+el.dataset.spot)}});
 document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||menuOpen||prefs.mode==='learn'||$('dialog[open]')||e.target.closest('input,textarea,select,[contenteditable]'))return;if(/^[1-4]$/.test(e.key)){e.preventDefault();answer(+e.key-1)}});
 $('#bankSearch').addEventListener('input',renderBank);$('#bankRel').addEventListener('change',renderBank);$('#bankLevel').addEventListener('change',renderBank);
-window.addEventListener('resize',()=>{cancelAnimationFrame(resizeToken);resizeToken=requestAnimationFrame(()=>{if(!menuOpen&&lastDraw&&!$('#main').classList.contains('text-mode'))draw({...lastDraw,animate:false})})});
+function refreshSceneLayout(){cancelAnimationFrame(resizeToken);resizeToken=requestAnimationFrame(()=>{if(!menuOpen&&lastDraw&&!$('#main').classList.contains('text-mode'))draw({...lastDraw,animate:false})})}
+window.addEventListener('resize',refreshSceneLayout);
+if(document.fonts?.addEventListener)document.fonts.addEventListener('loadingdone',refreshSceneLayout);
 $('#bankRel').innerHTML='<option value="all">Все предлоги</option>'+Object.keys(R).map(k=>`<option value="${k}">${R[k].ru}</option>`).join('');
 window.__ZHIMI={version:'10.1',pauseTimer,resumeTimer,syncTimer,tickTimer,recordKey,prefs,ROOMS,R,catBank,makeRound,prepare,questionMode,CATS,currentCat,recordQuestion,weakRelations,setCat,practiceSentence,sceneQuestion,draw,answer,action,render,mode:setMode,setRoom,state,validRound,relevantBank,
  qa:()=>({version:'10.1',timeLimits:TIME_LIMITS,rooms:Object.keys(ROOMS).length,sentences:catBank().length,uniqueSentences:new Set(catBank().map(q=>q.bo)).size,scenes:Object.fromEntries(Object.entries(ROOMS).map(([id,r])=>[id,r.scenes.length])),levelBankCounts:Object.fromEntries(Object.keys(ROOMS).map(id=>[id,relevantBank(id).length]))})};

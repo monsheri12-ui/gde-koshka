@@ -339,3 +339,7 @@ h1,.mast h1,.start-header h1{color:#744130}
 .scene-label-backdrop{fill:#fffaf0;fill-opacity:.97;stroke:#7d967d;stroke-width:1px}
 .scene-label-leader{fill:none;stroke:#667e62;stroke-width:1.2px;stroke-linecap:round}
 @media(max-width:800px){.scene-tools .scene-label-toggle{font-size:10px;padding:6px 8px;gap:7px}}
+
+/* Short leaders end on the object; the pale halo keeps them visible on furniture. */
+.scene-label-leader-halo{fill:none;stroke:#fffaf0;stroke-width:3.8px;stroke-linecap:round}
+.scene-label-anchor{fill:#41664d;stroke:#fffaf0;stroke-width:1px}
