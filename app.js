@@ -418,8 +418,8 @@ function viewBox(o){const rm=room();if(!prefs.zoom)return [0,0,rm.width,rm.heigh
  if(w/h>ratio)h=Math.min(rm.height,w/ratio);else w=Math.min(rm.width,h*ratio);
  return [Math.max(0,Math.min(rm.width-w,(x1+x2-w)/2)),Math.max(0,Math.min(rm.height-h,(y1+y2-h)/2)),w,h]}
 let catMaskSerial=0;
-function catSVG(p,animate,rid=prefs.room,staticImage=false){const rm=ROOMS[rid],h=p.width*currentCat().heightRatio,flip=p.flip?-1:1;const shadow=`<ellipse cx="${p.x+3}" cy="${p.y-1}" rx="${p.width*.33}" ry="${p.width*.045}" fill="#27170c" opacity=".3"/>`;
- const cat=`${shadow}<g transform="translate(${p.x} ${p.y}) scale(${flip} 1)"><g class="${animate?'appear':''}"><g class="${staticImage?'':'cat-idle'}"><image href="${currentCat().src}" x="${-p.width/2}" y="${-h}" width="${p.width}" height="${h}" preserveAspectRatio="xMidYMax meet"/></g></g></g>`;
+function catSVG(p,animate,rid=prefs.room,staticImage=false){const rm=ROOMS[rid],h=p.width*currentCat().heightRatio,flip=p.flip?-1:1;const shadow=`<ellipse class="scene-cat-shadow" cx="${p.x+3}" cy="${p.y-1}" rx="${p.width*.33}" ry="${p.width*.045}" fill="#27170c" opacity=".3"/>`;
+ const cat=`${shadow}<g transform="translate(${p.x} ${p.y}) scale(${flip} 1)"><g class="${animate?'appear':''}"><g class="${staticImage?'':'cat-idle'}"><image class="scene-cat" href="${currentCat().src}" x="${-p.width/2}" y="${-h}" width="${p.width}" height="${h}" preserveAspectRatio="xMidYMax meet"/></g></g></g>`;
  const foreground=(p.mask||[]).map(id=>rm.occluders[id]).filter(Boolean);if(!foreground.length)return cat;
  const id='cat-occlusion-'+(++catMaskSerial),filter=id+'-black';
  // Mask this cat only. Repainting furniture here could cover a different candidate cat.

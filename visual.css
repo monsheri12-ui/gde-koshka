@@ -204,7 +204,11 @@ h1,.mast h1,.start-header h1{color:#744130}
 .story-controls.is-done .story-replay-text,.story-controls.is-reduced .story-replay-text{display:inline}
 .story-track{height:3px;position:absolute;bottom:0;left:0;right:0;background:#ede7d7;overflow:hidden}
 .story-track i{display:block;height:100%;width:0;background:#75956c}
-.story-ground-shadow{fill:#35251c;opacity:.22}
+/* Separate the silhouette from busy paintings without changing its size.
+   Filter the walking viewport's parent, after the atlas frame has been clipped. */
+.scene-cat,[data-story-idle],[data-story-facing]{filter:drop-shadow(0 0 1.2px #fff8e5e6) drop-shadow(0 2px 2.8px #23170cb3)}
+.scene-cat-shadow{filter:blur(1.2px);opacity:.36}
+.story-ground-shadow{fill:#35251c;opacity:.36;filter:blur(1.6px)}
 .story-call{pointer-events:none}
 .story-call path{fill:#fffaf0;stroke:#c5a87d;stroke-width:2;filter:drop-shadow(0 3px 3px #38281725)}
 .story-call text{font:600 26px "Golos Text",system-ui,sans-serif;fill:#72432f}
